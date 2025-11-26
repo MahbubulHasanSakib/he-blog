@@ -5,7 +5,8 @@ import * as bcrypt from 'bcrypt'; // <-- Added
 import { User } from '../schemas/user.schema';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
-
+import { IUser } from '../interfaces/user.interface';
+import * as mongoose from 'mongoose';
 @Injectable()
 export class UserService {
   constructor(
@@ -69,5 +70,18 @@ export class UserService {
     if (!result) throw new NotFoundException('User not found');
 
     return { message: 'User deleted successfully' };
+  }
+
+  async getWhoAmI(user: IUser) {
+    const userData = await this.userModel.findOne(
+      { _id: user._id, deletedAt: null },
+      { password: 0, deletedAt: 0, createdAt: 0, updatedAt: 0 },
+    );
+
+    if (!userData) {
+      throw new NotFoundException('User not found');
+    }
+
+    return { data: userData };
   }
 }

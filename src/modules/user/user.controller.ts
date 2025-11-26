@@ -7,12 +7,16 @@ import {
   Param,
   Delete,
   UseInterceptors,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from './service/user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ResponseInterceptor } from 'src/utils/response.interceptor';
+import { AuthGuard } from '../auth/auth.guard';
+import { User } from './user.decorator';
+import { IUser } from './interfaces/user.interface';
 
 @ApiTags('users')
 @UseInterceptors(ResponseInterceptor)
@@ -28,6 +32,13 @@ export class UserController {
   @Get()
   findAll() {
     return this.userService.findAll();
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
+  @Get('whoami')
+  async whoami(@User() user: IUser) {
+    return await this.userService.getWhoAmI(user);
   }
 
   @Get(':id')

@@ -28,7 +28,7 @@ export class User extends Document {
     required: false,
     trim: true,
   })
-  fullName?: string;
+  name?: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

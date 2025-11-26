@@ -11,4 +11,12 @@ export class ApiConfigService {
   get getPort(): number {
     return this.configService.get('PORT');
   }
+
+  get getJwtSecret(): string {
+    return this.configService.get('JWT_SECRET');
+  }
+
+  get getJwtExpire(): string {
+    return this.configService.get('JWT_EXPIRE');
+  }
 }

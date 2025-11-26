@@ -57,15 +57,15 @@ export class CreatePostDto {
   @MaxLength(500)
   excerpt?: string;
 
-  @ApiProperty({
-    example: '654321098765432109876543',
-    description:
-      'The MongoDB ObjectId of the author. This should ideally be set by the server from the authenticated user.',
-  })
-  @IsString()
-  @IsNotEmpty()
-  // This should be the authenticated user's ID passed by the Auth Guard
-  authorId: string;
+  // @ApiProperty({
+  //   example: '654321098765432109876543',
+  //   description:
+  //     'The MongoDB ObjectId of the author. This should ideally be set by the server from the authenticated user.',
+  // })
+  // @IsString()
+  // @IsNotEmpty()
+  // // This should be the authenticated user's ID passed by the Auth Guard
+  // authorId: string;
 
   @ApiProperty({
     example:
@@ -91,14 +91,12 @@ export class CreatePostDto {
 
   @ApiProperty({
     type: [String],
-    example: ['654321098765432109873333', '654321098765432109874444'],
-    description: 'Array of MongoDB ObjectIds referencing Tags.',
+    example: ['Trade Merchandising', 'AI', 'Field Sales Automation'],
+    description: 'Array of  Tags.',
     required: false,
   })
   @IsArray()
   @IsOptional()
-  // Array of MongoDB Tag IDs
-  @IsMongoId({ each: true })
   tags?: string[];
 
   @ApiProperty({

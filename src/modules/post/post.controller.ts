@@ -11,15 +11,19 @@ import {
   HttpStatus,
   Patch,
   UseInterceptors,
+  UseGuards,
 } from '@nestjs/common';
 import { PostService } from './post.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PostStatus } from './interface/post-status.type';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { PaginateDto } from 'src/utils/dto/paginate.dto';
 import { SearchPost } from './dto/search-post.dto';
 import { ResponseInterceptor } from 'src/utils/response.interceptor';
+import { AuthGuard } from '../auth/auth.guard';
+import { User } from '../user/user.decorator';
+import { IUser } from '../user/interfaces/user.interface';
 
 @ApiTags('posts')
 @UseInterceptors(ResponseInterceptor)
@@ -27,9 +31,11 @@ import { ResponseInterceptor } from 'src/utils/response.interceptor';
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
   @Post()
-  create(@Body() createPostDto: CreatePostDto) {
-    return this.postService.create(createPostDto);
+  create(@Body() createPostDto: CreatePostDto,@User() user: IUser) {
+    return this.postService.create(createPostDto,user);
   }
 
   @Get()

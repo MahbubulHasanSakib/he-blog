@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import * as slugify from 'slugify'; // ✅ import as namespace for TS without esModuleInterop
 
 export type TagDocument = Tag & Document;
 
@@ -19,3 +20,10 @@ export class Tag {
 }
 
 export const TagSchema = SchemaFactory.createForClass(Tag);
+
+TagSchema.pre('save', function (next) {
+  if (!this.slug) {
+    this.slug = slugify.default(this.name, { lower: true });
+  }
+  next();
+});

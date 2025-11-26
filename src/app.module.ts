@@ -8,6 +8,8 @@ import { TagModule } from './modules/tag/tag.module';
 import { CategoryModule } from './modules/category/category.module';
 import { PostModule } from './modules/post/post.module';
 import { UserModule } from './modules/user/user.module';
+import { CoreModule } from './modules/core/core.module';
+import { AuthModule } from './modules/auth/auth.module';
 @Module({
   imports: [
     ApiConfigModule,
@@ -18,6 +20,8 @@ import { UserModule } from './modules/user/user.module';
       }),
       inject: [ApiConfigService],
     }),
+    CoreModule,
+    AuthModule,
     UserModule,
     PostModule,
     TagModule,

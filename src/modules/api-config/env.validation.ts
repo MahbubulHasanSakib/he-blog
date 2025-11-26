@@ -14,6 +14,12 @@ class EnvironmentVariables {
 
   @IsNumber()
   PORT: number;
+
+  @IsString()
+  JWT_SECRET: string;
+
+  @IsString()
+  JWT_EXPIRE: string;
 }
 
 export function validate(config: Record<string, unknown>) {

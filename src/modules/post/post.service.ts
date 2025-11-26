@@ -1,17 +1,25 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+import { Model, Connection } from 'mongoose';
 import { Post, PostDocument } from './schema/post.schema';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import slugify from 'slugify';
 import { PostStatus } from './interface/post-status.type';
 import { SearchPost } from './dto/search-post.dto';
+import { IUser } from '../user/interfaces/user.interface';
+import { Tag, TagDocument } from '../tag/schema/tag.schema';
 
 @Injectable()
 export class PostService {
   constructor(
     @InjectModel(Post.name) private readonly postModel: Model<PostDocument>,
+    @InjectModel(Tag.name) private readonly tagModel: Model<TagDocument>,
+    @InjectConnection() private readonly connection: Connection, // <-- Add t
   ) {}
 
   // Helper to generate a unique slug
@@ -27,19 +35,40 @@ export class PostService {
   }
 
   // Create a new post
-  async create(createPostDto: CreatePostDto) {
-    const slug = createPostDto.slug
-      ? await this.generateUniqueSlug(createPostDto.slug)
-      : await this.generateUniqueSlug(createPostDto.title);
+  async create(createPostDto: any, user: any) {
+    try {
+      // 1️⃣ Generate unique post slug
+      const slug = await this.generateUniqueSlug(
+        createPostDto.slug || createPostDto.title,
+      );
 
-    const createdPost = await this.postModel.create({
-      ...createPostDto,
-      slug,
-      excerpt:
-        createPostDto.excerpt ||
-        createPostDto.content.substring(0, 200) + '...',
-    });
-    return { data: createdPost };
+      // 2️⃣ Process tags (upsert)
+      const tagIds = [];
+      const tagNames: string[] = createPostDto.tags || [];
+
+      for (const name of tagNames) {
+        const tag = await this.tagModel.findOneAndUpdate(
+          { name },
+          { $setOnInsert: { name } },
+          { new: true, upsert: true },
+        );
+        tagIds.push(tag._id);
+      }
+
+      const createdPost = await this.postModel.create({
+        ...createPostDto,
+        authorId: user._id,
+        slug,
+        tags: tagIds,
+        excerpt:
+          createPostDto.excerpt ||
+          createPostDto.content.substring(0, 200) + '...',
+      });
+
+      return { data: createdPost };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 
   async findAll(query: SearchPost) {

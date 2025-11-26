@@ -5,10 +5,14 @@ import { CategoryModule } from '../category/category.module';
 import { TagModule } from '../tag/tag.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Post, PostSchema } from './schema/post.schema';
+import { UserModule } from '../user/user.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
     CategoryModule,
+    TagModule,
+    UserModule,
     TagModule,
     MongooseModule.forFeature([
       {
