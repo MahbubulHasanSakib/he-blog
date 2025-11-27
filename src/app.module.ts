@@ -10,6 +10,7 @@ import { PostModule } from './modules/post/post.module';
 import { UserModule } from './modules/user/user.module';
 import { CoreModule } from './modules/core/core.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { LeadMagnetModule } from './modules/lead-magnet/lead-magnet.module';
 @Module({
   imports: [
     ApiConfigModule,
@@ -26,6 +27,7 @@ import { AuthModule } from './modules/auth/auth.module';
     PostModule,
     TagModule,
     CategoryModule,
+    LeadMagnetModule,
   ],
   controllers: [AppController],
   providers: [AppService],

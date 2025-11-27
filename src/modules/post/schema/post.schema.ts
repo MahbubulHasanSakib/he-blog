@@ -64,3 +64,4 @@ export const PostSchema = SchemaFactory.createForClass(Post);
 
 PostSchema.index({ slug: 1, status: 1 });
 PostSchema.index({ categories: 1, status: 1 });
+PostSchema.index({ createdAt: -1 });
