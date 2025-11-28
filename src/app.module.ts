@@ -11,6 +11,7 @@ import { UserModule } from './modules/user/user.module';
 import { CoreModule } from './modules/core/core.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { LeadMagnetModule } from './modules/lead-magnet/lead-magnet.module';
+import { UploadModule } from './modules/upload/upload.module';
 @Module({
   imports: [
     ApiConfigModule,
@@ -28,6 +29,7 @@ import { LeadMagnetModule } from './modules/lead-magnet/lead-magnet.module';
     TagModule,
     CategoryModule,
     LeadMagnetModule,
+    UploadModule
   ],
   controllers: [AppController],
   providers: [AppService],

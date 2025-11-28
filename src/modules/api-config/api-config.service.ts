@@ -19,4 +19,20 @@ export class ApiConfigService {
   get getJwtExpire(): string {
     return this.configService.get('JWT_EXPIRE');
   }
+
+  get getAzureConnectionString(): string {
+    return this.configService.get('AZURE_STORAGE_CONNECTION_STRING');
+  }
+
+  get getAzureContainer(): string {
+    return this.configService.get('AZURE_STORAGE_CONTAINER');
+  }
+
+  get getAzureAccountKey(): string {
+    return this.configService.get('AZURE_ACCOUNT_KEY');
+  }
+
+  get getBasePath() {
+    return this.configService.get('BASE_PATH');
+  }
 }

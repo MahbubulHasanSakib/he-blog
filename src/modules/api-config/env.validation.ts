@@ -20,6 +20,19 @@ class EnvironmentVariables {
 
   @IsString()
   JWT_EXPIRE: string;
+
+  @IsString()
+  AZURE_STORAGE_CONNECTION_STRING: string;
+
+  @IsString()
+  AZURE_STORAGE_CONTAINER: string;
+
+  @IsString()
+  AZURE_ACCOUNT_KEY: string;
+
+  @IsString()
+  BASE_PATH: string;
+
 }
 
 export function validate(config: Record<string, unknown>) {
