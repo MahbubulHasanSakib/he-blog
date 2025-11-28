@@ -35,4 +35,12 @@ export class ApiConfigService {
   get getBasePath() {
     return this.configService.get('BASE_PATH');
   }
+
+  get getDocsUserName() {
+    return this.configService.get('DOCS_USERNAME');
+  }
+
+   get getDocsPassword() {
+    return this.configService.get('DOCS_PASSWORD');
+  }
 }

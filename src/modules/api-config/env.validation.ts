@@ -33,6 +33,11 @@ class EnvironmentVariables {
   @IsString()
   BASE_PATH: string;
 
+  @IsString()
+  DOCS_USERNAME: string;
+
+  @IsString()
+  DOCS_PASSWORD: string;
 }
 
 export function validate(config: Record<string, unknown>) {

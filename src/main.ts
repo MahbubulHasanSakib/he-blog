@@ -27,9 +27,12 @@ async function bootstrap() {
 
   app.useGlobalPipes(globalValidationPipe);
 
+  const docsUsername = configService.get<string>('DOCS_USERNAME');
+  const docsPassword = configService.get<string>('DOCS_PASSWORD');
+
   app.use(
     '/docs',
-    basicAuth({ challenge: true, users: { admin: 'hdml@1230' } }),
+    basicAuth({ challenge: true, users: { [docsUsername]: docsPassword } }),
   );
 
   const config = new DocumentBuilder()
