@@ -53,11 +53,34 @@ export class Post {
   })
   tags: mongoose.Schema.Types.ObjectId[];
 
-  @Prop({ default: null, index: true })
-  scheduledAt: Date;
+  @Prop({
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    default: [],
+  })
+  contributors: mongoose.Schema.Types.ObjectId[];
 
   @Prop({ type: Number, default: 0 })
   views: number;
+
+  @Prop({
+    type: [
+      {
+        _id: false,
+        modifier: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'User',
+          required: true,
+        },
+        modifierName: { type: String },
+        modifiedAt: { type: Date, default: new Date() },
+      },
+    ],
+    default: [],
+  })
+  editHistory: {
+    modifier: mongoose.Schema.Types.ObjectId;
+    modifiedAt: Date;
+  }[];
 }
 
 export const PostSchema = SchemaFactory.createForClass(Post);

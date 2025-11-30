@@ -111,13 +111,14 @@ export class CreatePostDto {
   status?: PostStatus;
 
   @ApiProperty({
-    example: new Date(),
-    description:
-      'The date and time the post should be published (only if status is SCHEDULED).',
+    type: [String],
+    example: ['654321098765432109871111', '654321098765432109872222'],
+    description: 'Array of MongoDB ObjectIds referencing Categories.',
     required: false,
   })
-  @IsDate()
+  @IsArray()
   @IsOptional()
-  // Should only be set if status is SCHEDULED
-  scheduledAt?: Date;
+  // Array of MongoDB Category IDs
+  @IsMongoId({ each: true })
+  contributors?: string[];
 }

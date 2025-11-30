@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import { Model, Connection } from 'mongoose';
+import { Model, Connection, Types } from 'mongoose';
 import { Post, PostDocument } from './schema/post.schema';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -13,12 +13,15 @@ import { PostStatus } from './interface/post-status.type';
 import { SearchPost } from './dto/search-post.dto';
 import { IUser } from '../user/interfaces/user.interface';
 import { Tag, TagDocument } from '../tag/schema/tag.schema';
+import { Category, CategoryDocument } from '../category/schema/category.schema';
 
 @Injectable()
 export class PostService {
   constructor(
     @InjectModel(Post.name) private readonly postModel: Model<PostDocument>,
     @InjectModel(Tag.name) private readonly tagModel: Model<TagDocument>,
+    @InjectModel(Category.name)
+    private readonly categoryModel: Model<CategoryDocument>,
     @InjectConnection() private readonly connection: Connection, // <-- Add t
   ) {}
 
@@ -35,7 +38,7 @@ export class PostService {
   }
 
   // Create a new post
-  async create(createPostDto: any, user: any) {
+  async create(createPostDto: CreatePostDto, user: any) {
     try {
       // 1️⃣ Generate unique post slug
       const slug = await this.generateUniqueSlug(
@@ -47,9 +50,10 @@ export class PostService {
       const tagNames: string[] = createPostDto.tags || [];
 
       for (const name of tagNames) {
+        const tagSlug = slugify(name, { lower: true });
         const tag = await this.tagModel.findOneAndUpdate(
-          { name },
-          { $setOnInsert: { name } },
+          { slug: tagSlug },
+          { $setOnInsert: { name, slug: tagSlug } },
           { new: true, upsert: true },
         );
         tagIds.push(tag._id);
@@ -64,6 +68,18 @@ export class PostService {
           createPostDto.excerpt ||
           createPostDto.content.substring(0, 200) + '...',
       });
+
+      // 4️⃣ Increment category post count
+      if (createPostDto.categories && createPostDto.categories.length > 0) {
+        const categoryIds = createPostDto.categories.map(
+          (id) => new Types.ObjectId(id),
+        );
+
+        await this.categoryModel.updateMany(
+          { _id: { $in: categoryIds } },
+          { $inc: { postCounts: 1 } },
+        );
+      }
 
       return { data: createdPost };
     } catch (error) {
@@ -89,8 +105,10 @@ export class PostService {
     const match: any = {};
     if (status) match.status = status;
     if (authorId) match.authorId = authorId;
-    if (categories && categories.length) match.categories = { $in: categories };
-    if (tags && tags.length) match.tags = { $in: tags };
+    if (categories && categories.length)
+      match.categories = { $in: categories?.map((e) => new Types.ObjectId(e)) };
+    if (tags && tags.length)
+      match.tags = { $in: tags?.map((e) => new Types.ObjectId(e)) };
     if (title) match.title = { $regex: title, $options: 'i' };
 
     const [{ data = [], meta = {} } = {}] = await this.postModel.aggregate([
@@ -118,6 +136,15 @@ export class PostService {
               },
             },
             {
+              $lookup: {
+                from: 'users',
+                localField: 'authorId',
+                foreignField: '_id',
+                pipeline: [{ $project: { name: 1 } }],
+                as: 'author',
+              },
+            },
+            {
               $project: {
                 title: 1,
                 slug: 1,
@@ -126,10 +153,13 @@ export class PostService {
                 status: 1,
                 scheduledAt: 1,
                 authorId: 1,
+                author: { $ifNull: [{ $first: '$author' }, null] },
                 categories: { name: 1, slug: 1 },
                 tags: { name: 1, slug: 1 },
+                views: 1,
                 createdAt: 1,
                 updatedAt: 1,
+                lastEdited: { $ifNull: [{ $last: '$editHistory' }, null] },
               },
             },
           ],
@@ -147,10 +177,12 @@ export class PostService {
 
   async findOne(id: string) {
     const post = await this.postModel
-      .findById(id)
+      .findByIdAndUpdate(id, { $inc: { views: 1 } }, { new: true })
       .populate('categories', 'name slug')
       .populate('tags', 'name slug')
+      .populate('contributors', 'name')
       .exec();
+
     if (!post) {
       throw new NotFoundException(`Post with ID "${id}" not found.`);
     }
@@ -175,23 +207,107 @@ export class PostService {
     return { data: updatedPost };
   }
 
-  async update(id: string, updatePostDto: UpdatePostDto) {
-    const updateData: any = { ...updatePostDto };
+  async update(id: string, updatePostDto: UpdatePostDto, user: IUser) {
+    const session = await this.postModel.db.startSession();
+    session.startTransaction();
 
-    if (updatePostDto.title) {
-      updateData.slug = updatePostDto.slug
-        ? await this.generateUniqueSlug(updatePostDto.slug)
-        : await this.generateUniqueSlug(updatePostDto.title);
+    try {
+      const updateData: any = { ...updatePostDto };
+
+      if (updatePostDto.title) {
+        updateData.slug = updatePostDto.slug
+          ? await this.generateUniqueSlug(updatePostDto.slug)
+          : await this.generateUniqueSlug(updatePostDto.title);
+      }
+
+      if (updatePostDto.tags?.length) {
+        const tagIds = [];
+
+        for (const name of updatePostDto.tags) {
+          const tagSlug = slugify(name, { lower: true });
+
+          const tag = await this.tagModel.findOneAndUpdate(
+            { slug: tagSlug },
+            { $setOnInsert: { name, slug: tagSlug } },
+            { new: true, upsert: true, session },
+          );
+
+          tagIds.push(tag._id);
+        }
+
+        updateData.tags = tagIds;
+      }
+
+      if (updatePostDto.categories) {
+        const newCategoryIds = updatePostDto.categories.map(
+          (id) => new Types.ObjectId(id),
+        );
+
+        const existingPost = await this.postModel
+          .findById(id)
+          .select('categories')
+          .session(session);
+
+        if (!existingPost) {
+          throw new NotFoundException('Post not found');
+        }
+
+        const oldIds = existingPost.categories.map((x) => x.toString());
+        const newIds = newCategoryIds.map((x) => x.toString());
+
+        const added = newIds.filter((x) => !oldIds.includes(x));
+        const removed = oldIds.filter((x) => !newIds.includes(x));
+
+        if (added.length > 0) {
+          await this.categoryModel.updateMany(
+            { _id: { $in: added } },
+            { $inc: { postCounts: 1 } },
+            { session },
+          );
+        }
+
+        if (removed.length > 0) {
+          await this.categoryModel.updateMany(
+            { _id: { $in: removed } },
+            { $inc: { postCounts: -1 } },
+            { session },
+          );
+        }
+
+        updateData.categories = newCategoryIds;
+      }
+
+      const updateQuery = {
+        $set: updateData,
+        $push: {
+          editHistory: {
+            modifier: user._id,
+            modifierName: user.name,
+            modifiedAt: new Date(),
+            _id: undefined,
+          },
+        },
+      };
+
+      const updatedPost = await this.postModel.findByIdAndUpdate(
+        id,
+        updateQuery,
+        { new: true, session },
+      );
+
+      if (!updatedPost) {
+        throw new NotFoundException('Post not found for update.');
+      }
+
+      await session.commitTransaction();
+      session.endSession();
+
+      return { data: updatedPost };
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      throw new BadRequestException(error.message);
     }
-
-    const existingPost = await this.postModel
-      .findByIdAndUpdate(id, { $set: updateData }, { new: true })
-      .exec();
-
-    if (!existingPost) {
-      throw new NotFoundException(`Post with ID "${id}" not found for update.`);
-    }
-    return { data: existingPost };
   }
 
   async remove(id: string) {

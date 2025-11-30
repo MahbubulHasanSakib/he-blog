@@ -34,8 +34,8 @@ export class PostController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @Post()
-  create(@Body() createPostDto: CreatePostDto,@User() user: IUser) {
-    return this.postService.create(createPostDto,user);
+  create(@Body() createPostDto: CreatePostDto, @User() user: IUser) {
+    return this.postService.create(createPostDto, user);
   }
 
   @Get()
@@ -53,9 +53,11 @@ export class PostController {
     return this.postService.findOne(id);
   }
 
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto) {
-    return this.postService.update(id, updatePostDto);
+  update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto,@User() user:IUser) {
+    return this.postService.update(id, updatePostDto,user);
   }
 
   @Delete(':id')

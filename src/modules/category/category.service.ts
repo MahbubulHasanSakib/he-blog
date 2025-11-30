@@ -5,6 +5,7 @@ import { Category, CategoryDocument } from './schema/category.schema';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import slugify from 'slugify';
+import { IUser } from '../user/interfaces/user.interface';
 
 @Injectable()
 export class CategoryService {
@@ -25,7 +26,7 @@ export class CategoryService {
     return slug;
   }
 
-  async create(createCategoryDto: CreateCategoryDto) {
+  async create(createCategoryDto: CreateCategoryDto, user: IUser) {
     const slug = createCategoryDto.slug
       ? await this.generateUniqueSlug(createCategoryDto.slug)
       : await this.generateUniqueSlug(createCategoryDto.name);
@@ -33,12 +34,17 @@ export class CategoryService {
     const createdCategory = await this.categoryModel.create({
       ...createCategoryDto,
       slug,
+      createdBy: user._id,
     });
     return { data: createdCategory };
   }
 
   async findAll() {
-    let categories = await this.categoryModel.find().sort({ name: 1 }).exec();
+    let categories = await this.categoryModel
+      .find()
+      .sort({ createdAt: -1 })
+      .select('name slug postCounts')
+      .exec();
     return { data: categories };
   }
 

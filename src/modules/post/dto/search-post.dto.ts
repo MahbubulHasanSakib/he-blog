@@ -9,6 +9,7 @@ import {
 } from 'class-validator';
 import { PaginateDto } from 'src/utils/dto/paginate.dto';
 import { PostStatus } from '../interface/post-status.type';
+import { Transform } from 'class-transformer';
 
 export class SearchPost extends PaginateDto {
   @ApiPropertyOptional({ enum: PostStatus })
@@ -28,12 +29,23 @@ export class SearchPost extends PaginateDto {
   @IsArray()
   @IsMongoId({ each: true })
   @IsOptional()
+  @Transform(({ value }) => {
+    if (!value) return [];
+    return Array.isArray(value) ? value : [value];
+  })
   categories?: string[];
 
-  @ApiPropertyOptional({ type: [String], description: 'Filter by tag IDs' })
+  @ApiPropertyOptional({
+    type: [String],
+    description: 'Filter by tag IDs',
+  })
   @IsArray()
   @IsMongoId({ each: true })
   @IsOptional()
+  @Transform(({ value }) => {
+    if (!value) return [];
+    return Array.isArray(value) ? value : [value];
+  })
   tags?: string[];
 
   @ApiPropertyOptional({ description: 'Search by post title' })

@@ -10,12 +10,16 @@ import {
   HttpStatus,
   UseInterceptors,
   Patch,
+  UseGuards,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ResponseInterceptor } from 'src/utils/response.interceptor';
+import { AuthGuard } from '../auth/auth.guard';
+import { IUser } from '../user/interfaces/user.interface';
+import { User } from '../user/user.decorator';
 
 @ApiTags('categories')
 @UseInterceptors(ResponseInterceptor)
@@ -24,9 +28,11 @@ export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
   // POST /categories: Create a new category
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard)
   @Post()
-  create(@Body() createCategoryDto: CreateCategoryDto) {
-    return this.categoryService.create(createCategoryDto);
+  create(@Body() createCategoryDto: CreateCategoryDto, @User() user: IUser) {
+    return this.categoryService.create(createCategoryDto, user);
   }
 
   // GET /categories: Get all categories
