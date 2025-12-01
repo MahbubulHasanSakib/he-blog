@@ -12,6 +12,7 @@ import { CoreModule } from './modules/core/core.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { LeadMagnetModule } from './modules/lead-magnet/lead-magnet.module';
 import { UploadModule } from './modules/upload/upload.module';
+import { MailModule } from './modules/mail/mail.module';
 @Module({
   imports: [
     ApiConfigModule,
@@ -29,7 +30,8 @@ import { UploadModule } from './modules/upload/upload.module';
     TagModule,
     CategoryModule,
     LeadMagnetModule,
-    UploadModule
+    UploadModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

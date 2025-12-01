@@ -38,6 +38,19 @@ class EnvironmentVariables {
 
   @IsString()
   DOCS_PASSWORD: string;
+
+  @IsString()
+  EMAIL_HOST: string;
+
+  @IsString()
+  EMAIL_USER: string;
+
+  @IsString()
+  EMAIL_PASS: string;
+
+  @IsNumber()
+  @IsOptional()
+  EMAIL_PORT: number;
 }
 
 export function validate(config: Record<string, unknown>) {

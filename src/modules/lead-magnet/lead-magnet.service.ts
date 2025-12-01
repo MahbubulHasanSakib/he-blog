@@ -4,12 +4,21 @@ import { UpdateLeadMagnetDto } from './dto/update-lead-magnet.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { LeadMagnet, LeadMagnetDocument } from './schema/lead-magnet.schema';
 import { Model } from 'mongoose';
+import { CreateLeadMagnetRequestDto } from './dto/create-lead-magnet-request.dto';
+import {
+  LeadDocument,
+  LeadMagnetRequest,
+} from './schema/lead-magnet-request.schema';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class LeadMagnetService {
   constructor(
     @InjectModel(LeadMagnet.name)
     private readonly leadMagnetModel: Model<LeadMagnetDocument>,
+    @InjectModel(LeadMagnetRequest.name)
+    private readonly leadRequestModel: Model<LeadDocument>,
+    private readonly mailService: MailService,
   ) {}
 
   async create(createLeadMagnetDto: CreateLeadMagnetDto) {
@@ -41,5 +50,32 @@ export class LeadMagnetService {
     const deleted = await this.leadMagnetModel.findByIdAndDelete(id).exec();
     if (!deleted) throw new NotFoundException('Lead magnet not found');
     return { message: 'Lead magnet deleted successfully' };
+  }
+
+  async createRequest(dto: CreateLeadMagnetRequestDto) {
+    const mailInfo = {
+      fileUrl: dto.fileUrl,
+      fileName: dto.fileName,
+      email: dto.email,
+    };
+
+    let emailSentAt: Date | undefined;
+
+    try {
+      await this.mailService.sendEmail(mailInfo);
+      emailSentAt = new Date();
+    } catch (err) {
+      console.error('Failed to send email:', err.message);
+    }
+
+    // Create lead request document
+    const record = {
+      ...dto,
+      ...(emailSentAt ? { emailSentAt } : {}),
+    };
+
+    const data = await this.leadRequestModel.create(record);
+
+    return { data };
   }
 }

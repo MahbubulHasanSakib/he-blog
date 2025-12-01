@@ -43,4 +43,21 @@ export class ApiConfigService {
    get getDocsPassword() {
     return this.configService.get('DOCS_PASSWORD');
   }
+
+  
+  get getEmailHost(): string {
+    return this.configService.get('EMAIL_HOST');
+  }
+
+  get getEmailUser(): string {
+    return this.configService.get('EMAIL_USER');
+  }
+
+  get getEmailPassword(): string {
+    return this.configService.get('EMAIL_PASS');
+  }
+
+  get getEmailPort(): number {
+    return this.configService.get('EMAIL_PORT');
+  }
 }

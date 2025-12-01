@@ -13,6 +13,7 @@ import { CreateLeadMagnetDto } from './dto/create-lead-magnet.dto';
 import { UpdateLeadMagnetDto } from './dto/update-lead-magnet.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { ResponseInterceptor } from 'src/utils/response.interceptor';
+import { CreateLeadMagnetRequestDto } from './dto/create-lead-magnet-request.dto';
 
 @ApiTags('lead-magnet')
 @UseInterceptors(ResponseInterceptor)
@@ -23,6 +24,11 @@ export class LeadMagnetController {
   @Post()
   create(@Body() createLeadMagnetDto: CreateLeadMagnetDto) {
     return this.leadMagnetService.create(createLeadMagnetDto);
+  }
+
+  @Post("request")
+  createRequest(@Body() createLeadMagnetDto: CreateLeadMagnetRequestDto) {
+    return this.leadMagnetService.createRequest(createLeadMagnetDto);
   }
 
   @Get()
