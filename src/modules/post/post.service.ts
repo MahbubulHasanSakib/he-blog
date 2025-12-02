@@ -3,8 +3,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import { Model, Connection, Types } from 'mongoose';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, Types } from 'mongoose';
 import { Post, PostDocument } from './schema/post.schema';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -14,6 +14,7 @@ import { SearchPost } from './dto/search-post.dto';
 import { IUser } from '../user/interfaces/user.interface';
 import { Tag, TagDocument } from '../tag/schema/tag.schema';
 import { Category, CategoryDocument } from '../category/schema/category.schema';
+import { ActivityService } from '../activity/activity.service';
 
 @Injectable()
 export class PostService {
@@ -22,7 +23,7 @@ export class PostService {
     @InjectModel(Tag.name) private readonly tagModel: Model<TagDocument>,
     @InjectModel(Category.name)
     private readonly categoryModel: Model<CategoryDocument>,
-    @InjectConnection() private readonly connection: Connection, // <-- Add t
+    private activityService: ActivityService,
   ) {}
 
   // Helper to generate a unique slug
@@ -80,6 +81,16 @@ export class PostService {
           { $inc: { postCounts: 1 } },
         );
       }
+
+      const statusMessage =
+        createPostDto.status === PostStatus.PUBLISHED
+          ? 'New Post Published'
+          : 'Draft Saved';
+
+      await this.activityService.create({
+        message: statusMessage,
+        title: createdPost.title,
+      });
 
       return { data: createdPost };
     } catch (error) {
@@ -176,17 +187,60 @@ export class PostService {
   }
 
   async findOne(id: string) {
-    const post = await this.postModel
-      .findByIdAndUpdate(id, { $inc: { views: 1 } }, { new: true })
+    // Check if post exists first
+    let post = await this.postModel.findById(id);
+    if (!post) {
+      throw new NotFoundException(`Post with ID "${id}" not found.`);
+    }
+
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+    // Try to increment existing month
+    let postViewUpdate = await this.postModel
+      .findOneAndUpdate(
+        {
+          _id: id,
+          'viewsByMonth.month': currentMonth,
+        },
+        {
+          $inc: {
+            views: 1,
+            'viewsByMonth.$.views': 1,
+          },
+          $set: { lastViewedAt: now },
+        },
+        { new: true },
+      )
       .populate('categories', 'name slug')
       .populate('tags', 'name slug')
       .populate('contributors', 'name')
       .exec();
 
-    if (!post) {
-      throw new NotFoundException(`Post with ID "${id}" not found.`);
+    // If month doesn't exist in array, push new month
+    if (!postViewUpdate) {
+      postViewUpdate = await this.postModel
+        .findByIdAndUpdate(
+          id,
+          {
+            $inc: { views: 1 },
+            $set: { lastViewedAt: now },
+            $push: {
+              viewsByMonth: {
+                month: currentMonth,
+                views: 1,
+              },
+            },
+          },
+          { new: true },
+        )
+        .populate('categories', 'name slug')
+        .populate('tags', 'name slug')
+        .populate('contributors', 'name')
+        .exec();
     }
-    return { data: post };
+
+    return { data: postViewUpdate };
   }
 
   // Find a published post by slug (for public view)

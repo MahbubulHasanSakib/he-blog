@@ -13,6 +13,9 @@ import { AuthModule } from './modules/auth/auth.module';
 import { LeadMagnetModule } from './modules/lead-magnet/lead-magnet.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { MailModule } from './modules/mail/mail.module';
+import { SubscribeModule } from './modules/subscribe/subscribe.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { ActivityModule } from './modules/activity/activity.module';
 @Module({
   imports: [
     ApiConfigModule,
@@ -32,6 +35,9 @@ import { MailModule } from './modules/mail/mail.module';
     LeadMagnetModule,
     UploadModule,
     MailModule,
+    SubscribeModule,
+    DashboardModule,
+    ActivityModule,
   ],
   controllers: [AppController],
   providers: [AppService],

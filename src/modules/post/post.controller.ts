@@ -56,8 +56,12 @@ export class PostController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto,@User() user:IUser) {
-    return this.postService.update(id, updatePostDto,user);
+  update(
+    @Param('id') id: string,
+    @Body() updatePostDto: UpdatePostDto,
+    @User() user: IUser,
+  ) {
+    return this.postService.update(id, updatePostDto, user);
   }
 
   @Delete(':id')

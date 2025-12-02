@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Category, CategoryDocument } from './schema/category.schema';
@@ -31,6 +35,16 @@ export class CategoryService {
       ? await this.generateUniqueSlug(createCategoryDto.slug)
       : await this.generateUniqueSlug(createCategoryDto.name);
 
+    const existingCategory = await this.categoryModel.findOne({
+      $or: [{ name: createCategoryDto.name }, { slug }],
+    });
+
+    if (existingCategory) {
+      throw new BadRequestException(
+        'Category with this name or slug already exists',
+      );
+    }
+
     const createdCategory = await this.categoryModel.create({
       ...createCategoryDto,
       slug,
@@ -58,6 +72,16 @@ export class CategoryService {
 
   async update(id: string, updateCategoryDto: UpdateCategoryDto) {
     const updateData: any = { ...updateCategoryDto };
+
+    const catExist = await this.categoryModel.findOne({
+      name: updateCategoryDto.name,
+    });
+
+    if (catExist) {
+      throw new BadRequestException(
+        'Category with this name or slug already exists',
+      );
+    }
 
     if (updateCategoryDto.name) {
       updateData.slug = updateCategoryDto.slug

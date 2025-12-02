@@ -7,6 +7,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Post, PostSchema } from './schema/post.schema';
 import { UserModule } from '../user/user.module';
 import { AuthModule } from '../auth/auth.module';
+import { ActivityModule } from '../activity/activity.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { AuthModule } from '../auth/auth.module';
     TagModule,
     UserModule,
     TagModule,
+    ActivityModule,
     MongooseModule.forFeature([
       {
         name: Post.name,
@@ -23,5 +25,6 @@ import { AuthModule } from '../auth/auth.module';
   ],
   controllers: [PostController],
   providers: [PostService],
+  exports: [MongooseModule, PostService],
 })
 export class PostModule {}

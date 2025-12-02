@@ -3,7 +3,7 @@ import { HydratedDocument } from 'mongoose';
 
 export type LeadDocument = HydratedDocument<LeadMagnetRequest>;
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, versionKey: false })
 export class LeadMagnetRequest {
   @Prop({ required: true, index: true })
   email: string;

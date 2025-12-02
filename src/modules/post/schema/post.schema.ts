@@ -62,6 +62,21 @@ export class Post {
   @Prop({ type: Number, default: 0 })
   views: number;
 
+  @Prop({ type: Date, default: null })
+  lastViewedAt: Date;
+
+  @Prop({
+    type: [
+      {
+        month: String,
+        views: Number,
+        _id: false,
+      },
+    ],
+    default: [],
+  })
+  viewsByMonth: { month: string; views: number }[];
+
   @Prop({
     type: [
       {

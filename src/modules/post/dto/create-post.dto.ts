@@ -102,8 +102,7 @@ export class CreatePostDto {
   @ApiProperty({
     enum: PostStatus,
     example: PostStatus.DRAFT,
-    description:
-      'The publication status of the post (Draft, Published, Scheduled).',
+    description: 'The publication status of the post (Draft, Published).',
     required: false,
   })
   @IsEnum(PostStatus)

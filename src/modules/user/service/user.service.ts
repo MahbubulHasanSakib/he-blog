@@ -1,8 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt'; // <-- Added
-import { User } from '../schemas/user.schema';
+import { User, UserDocument } from '../schemas/user.schema';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { IUser } from '../interfaces/user.interface';
@@ -10,11 +14,16 @@ import * as mongoose from 'mongoose';
 @Injectable()
 export class UserService {
   constructor(
-    @InjectModel(User.name) private readonly userModel: Model<User>,
+    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
   ) {}
 
   // CREATE
   async create(dto: CreateUserDto) {
+    if (!dto.password || dto.password.length < 8) {
+      throw new BadRequestException(
+        'Password must be at least 8 characters long',
+      );
+    }
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
     const user = await this.userModel.create({
@@ -26,7 +35,7 @@ export class UserService {
   }
 
   async findAll() {
-    let users = this.userModel.find({ deletedAt: null }).exec();
+    let users = await this.userModel.find({ deletedAt: null }).exec();
     return { data: users };
   }
 
