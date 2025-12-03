@@ -35,7 +35,12 @@ export class Post {
   })
   status: PostStatus;
 
-  @Prop({ type: mongoose.Schema.Types.ObjectId, required: true, index: true })
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+    index: true,
+  })
   authorId: mongoose.Schema.Types.ObjectId;
 
   @Prop({ default: null })
@@ -103,3 +108,13 @@ export const PostSchema = SchemaFactory.createForClass(Post);
 PostSchema.index({ slug: 1, status: 1 });
 PostSchema.index({ categories: 1, status: 1 });
 PostSchema.index({ createdAt: -1 });
+
+PostSchema.virtual('author', {
+  ref: 'User',
+  localField: 'authorId',
+  foreignField: '_id',
+  justOne: true,
+});
+
+PostSchema.set('toObject', { virtuals: true } as any);
+PostSchema.set('toJSON', { virtuals: true } as any);

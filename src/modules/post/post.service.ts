@@ -151,7 +151,7 @@ export class PostService {
                 from: 'users',
                 localField: 'authorId',
                 foreignField: '_id',
-                pipeline: [{ $project: { name: 1 } }],
+                pipeline: [{ $project: { name: 1, image: 1 } }],
                 as: 'author',
               },
             },
@@ -214,7 +214,8 @@ export class PostService {
       )
       .populate('categories', 'name slug')
       .populate('tags', 'name slug')
-      .populate('contributors', 'name')
+      .populate('contributors', 'name image')
+      .populate('author', 'name image') // virtual populate
       .exec();
 
     // If month doesn't exist in array, push new month
@@ -236,7 +237,8 @@ export class PostService {
         )
         .populate('categories', 'name slug')
         .populate('tags', 'name slug')
-        .populate('contributors', 'name')
+        .populate('contributors', 'name image')
+        .populate('author', 'name image') // virtual populate
         .exec();
     }
 
