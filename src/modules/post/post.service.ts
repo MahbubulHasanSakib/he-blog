@@ -187,50 +187,56 @@ export class PostService {
   }
 
   async findOne(id: string) {
-    // Check if post exists first
-    let post = await this.postModel.findById(id);
+    // 1. Check post exists
+    const post = await this.postModel.findById(id);
     if (!post) {
       throw new NotFoundException(`Post with ID "${id}" not found.`);
     }
 
     const now = new Date();
-    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const currentMonth = `${now.getFullYear()}-${String(
+      now.getMonth() + 1,
+    ).padStart(2, '0')}`;
 
-    // Try to increment existing month
-    let postViewUpdate = await this.postModel
-      .findOneAndUpdate(
-        {
-          _id: id,
-          'viewsByMonth.month': currentMonth,
-        },
-        {
-          $inc: {
-            views: 1,
-            'viewsByMonth.$.views': 1,
+    // 2. Does the month already exist?
+    const existingMonth = post.viewsByMonth?.some(
+      (v) => v.month === currentMonth,
+    );
+
+    let updatedPost;
+
+    if (existingMonth) {
+      // Increment existing month
+      updatedPost = await this.postModel
+        .findOneAndUpdate(
+          {
+            _id: id,
+            'viewsByMonth.month': currentMonth,
           },
-          $set: { lastViewedAt: now },
-        },
-        { new: true },
-      )
-      .populate('categories', 'name slug')
-      .populate('tags', 'name slug')
-      .populate('contributors', 'name image')
-      .populate('author', 'name image') // virtual populate
-      .exec();
-
-    // If month doesn't exist in array, push new month
-    if (!postViewUpdate) {
-      postViewUpdate = await this.postModel
+          {
+            $inc: {
+              views: 1,
+              'viewsByMonth.$.views': 1,
+            },
+            $set: { lastViewedAt: now },
+          },
+          { new: true },
+        )
+        .populate('categories', 'name slug')
+        .populate('tags', 'name slug')
+        .populate('contributors', 'name image')
+        .populate('author', 'name image')
+        .exec();
+    } else {
+      // Push new month
+      updatedPost = await this.postModel
         .findByIdAndUpdate(
           id,
           {
             $inc: { views: 1 },
             $set: { lastViewedAt: now },
             $push: {
-              viewsByMonth: {
-                month: currentMonth,
-                views: 1,
-              },
+              viewsByMonth: { month: currentMonth, views: 1 },
             },
           },
           { new: true },
@@ -238,11 +244,11 @@ export class PostService {
         .populate('categories', 'name slug')
         .populate('tags', 'name slug')
         .populate('contributors', 'name image')
-        .populate('author', 'name image') // virtual populate
+        .populate('author', 'name image')
         .exec();
     }
 
-    return { data: postViewUpdate };
+    return { data: updatedPost };
   }
 
   // Find a published post by slug (for public view)
