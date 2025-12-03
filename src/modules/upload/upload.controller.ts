@@ -114,6 +114,7 @@ export class UploadController {
   ) {
     const buffer = Buffer.from(uploadFileDto.uri, 'base64');
     const detected = await FileType.fileTypeFromBuffer(buffer);
+    console.log(JSON.stringify(detected, null, 4));
     if (
       !detected ||
       !/(png|jpeg|jpg|pdf|mp4|mpeg|gif|webm|m4a|webp)/i.test(detected.ext)
