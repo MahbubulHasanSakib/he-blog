@@ -2,6 +2,17 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
 export type UserDocument = User & Document;
+
+@Schema({ _id: false })
+export class Image {
+  @Prop({ required: true })
+  original: string;
+
+  @Prop({ required: true })
+  thumb: string;
+}
+export const ImageSchema = SchemaFactory.createForClass(Image);
+
 @Schema({
   timestamps: true,
   versionKey: false,
@@ -30,6 +41,9 @@ export class User {
     required: false,
   })
   name?: string;
+
+  @Prop({ type: ImageSchema })
+  image: Image;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

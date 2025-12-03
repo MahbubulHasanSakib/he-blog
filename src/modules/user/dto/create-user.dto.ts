@@ -5,9 +5,21 @@ import {
   MinLength,
   MaxLength,
   IsOptional,
+  IsUrl,
+  ValidateNested,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 
+export class ImageDto {
+  @IsUrl()
+  @ApiProperty()
+  original: string;
+
+  @IsUrl()
+  @ApiProperty()
+  thumb: string;
+}
 export class CreateUserDto {
   @ApiProperty({
     example: 'john.doe@hawkeyes.com',
@@ -37,4 +49,10 @@ export class CreateUserDto {
   @IsOptional()
   @MaxLength(100)
   name?: string;
+
+  @ApiProperty({ type: ImageDto, required: false })
+  @Type(() => ImageDto)
+  @ValidateNested()
+  @IsOptional()
+  image: ImageDto;
 }
