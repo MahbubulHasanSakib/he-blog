@@ -10,6 +10,7 @@ import {
   LeadMagnetRequest,
 } from './schema/lead-magnet-request.schema';
 import { MailService } from '../mail/mail.service';
+import { LeadMagnetFilterDto } from './dto/lead-magnet-filter.dto';
 
 @Injectable()
 export class LeadMagnetService {
@@ -26,9 +27,38 @@ export class LeadMagnetService {
     return { data: data };
   }
 
-  async findAll() {
-    let data = await this.leadMagnetModel.find().sort({ createdAt: -1 }).exec();
-    return { data };
+  async findAll(query: LeadMagnetFilterDto) {
+    const { page: queryPage, limit: queryLimit, title, type } = query;
+
+    const page = +queryPage > 0 ? +queryPage : 1;
+    const limit = +queryLimit > 0 ? +queryLimit : 20;
+    const skip = limit * (page - 1);
+
+    const match: any = {};
+
+    if (title) match.title = { $regex: title, $options: 'i' };
+    if (type) match.type = { $regex: type, $options: 'i' };
+
+    const [{ data = [], meta = {} } = {}] =
+      await this.leadMagnetModel.aggregate([
+        { $match: match },
+        {
+          $facet: {
+            data: [
+              { $sort: { createdAt: -1 } },
+              { $skip: skip },
+              { $limit: limit },
+            ],
+            meta: [{ $count: 'total' }],
+          },
+        },
+        { $unwind: { path: '$meta', preserveNullAndEmptyArrays: true } },
+      ]);
+
+    return {
+      data,
+      meta: { page, limit, ...meta },
+    };
   }
 
   async findOne(id: string) {

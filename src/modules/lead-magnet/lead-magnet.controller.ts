@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseInterceptors,
+  Query,
 } from '@nestjs/common';
 import { LeadMagnetService } from './lead-magnet.service';
 import { CreateLeadMagnetDto } from './dto/create-lead-magnet.dto';
@@ -14,6 +15,7 @@ import { UpdateLeadMagnetDto } from './dto/update-lead-magnet.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { ResponseInterceptor } from 'src/utils/response.interceptor';
 import { CreateLeadMagnetRequestDto } from './dto/create-lead-magnet-request.dto';
+import { LeadMagnetFilterDto } from './dto/lead-magnet-filter.dto';
 
 @ApiTags('lead-magnet')
 @UseInterceptors(ResponseInterceptor)
@@ -26,14 +28,14 @@ export class LeadMagnetController {
     return this.leadMagnetService.create(createLeadMagnetDto);
   }
 
-  @Post("request")
+  @Post('request')
   createRequest(@Body() createLeadMagnetDto: CreateLeadMagnetRequestDto) {
     return this.leadMagnetService.createRequest(createLeadMagnetDto);
   }
 
   @Get()
-  findAll() {
-    return this.leadMagnetService.findAll();
+  findAll(@Query() query: LeadMagnetFilterDto) {
+    return this.leadMagnetService.findAll(query);
   }
 
   @Get(':id')
