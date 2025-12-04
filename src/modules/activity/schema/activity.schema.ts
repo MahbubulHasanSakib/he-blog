@@ -10,9 +10,6 @@ export class Activity {
 
   @Prop({ required: true })
   title: string;
-
-  @Prop({ default: new Date() })
-  createdAt: Date;
 }
 
 export const ActivitySchema = SchemaFactory.createForClass(Activity);
