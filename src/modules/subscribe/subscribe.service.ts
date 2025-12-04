@@ -12,6 +12,12 @@ export class SubscribeService {
     private readonly subscribeModel: Model<SubscribeDocument>,
   ) {}
   async create(createSubscribeDto: CreateSubscribeDto) {
+    const exists = await this.subscribeModel.findOne({
+      email: createSubscribeDto.email,
+    });
+    if (exists) {
+      throw new Error('Email already exists');
+    }
     const createdSubscribe =
       await this.subscribeModel.create(createSubscribeDto);
     return { data: createdSubscribe };

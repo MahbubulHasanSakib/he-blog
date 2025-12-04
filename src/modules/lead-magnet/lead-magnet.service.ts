@@ -89,22 +89,24 @@ export class LeadMagnetService {
       email: dto.email,
     };
 
-    let emailSentAt: Date | undefined;
+    // let emailSentAt: Date | undefined;
 
-    try {
-      await this.mailService.sendEmail(mailInfo);
-      emailSentAt = new Date();
-    } catch (err) {
-      console.error('Failed to send email:', err.message);
-    }
+    // try {
+    //   await this.mailService.sendEmail(mailInfo);
+    //   emailSentAt = new Date();
+    // } catch (err) {
+    //   console.error('Failed to send email:', err.message);
+    // }
 
-    // Create lead request document
+    // // Create lead request document
     const record = {
       ...dto,
-      ...(emailSentAt ? { emailSentAt } : {}),
+      //...(emailSentAt ? { emailSentAt } : {}),
     };
 
     const data = await this.leadRequestModel.create(record);
+
+    this.mailService.sendEmail(mailInfo);
 
     return { data };
   }
