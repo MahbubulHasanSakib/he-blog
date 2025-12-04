@@ -8,14 +8,18 @@ import { Post, PostSchema } from './schema/post.schema';
 import { UserModule } from '../user/user.module';
 import { AuthModule } from '../auth/auth.module';
 import { ActivityModule } from '../activity/activity.module';
+import { SubscribeModule } from '../subscribe/subscribe.module';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
+    SubscribeModule,
     CategoryModule,
     TagModule,
     UserModule,
     TagModule,
     ActivityModule,
+    MailModule,
     MongooseModule.forFeature([
       {
         name: Post.name,

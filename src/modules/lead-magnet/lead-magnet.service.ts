@@ -107,7 +107,12 @@ export class LeadMagnetService {
     const data = await this.leadRequestModel.create(record);
 
     this.mailService
-      .sendEmail(mailInfo, 'Lead Magnet Request', 'Here is your requested file')
+      .sendEmail(
+        mailInfo,
+        'Lead Magnet Request',
+        '<h2>Here is your requested file</h2>',
+        'attached',
+      )
       .catch((err) => {
         console.error('Failed to send email:', err.message);
       });

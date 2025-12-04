@@ -34,46 +34,54 @@ export class MailService {
 
     return 'application/octet-stream'; // default
   }
-  async sendEmail(body, subject, htmlText) {
-    console.log(body);
+  async sendEmail(body, subject, htmlText, label) {
     const { fileName, fileUrl, email } = body;
+    let mimeType = null,
+      fileBuffer = null,
+      fileExt = null;
 
-    const response = await axios.get(fileUrl, { responseType: 'arraybuffer' });
-    const fileBuffer = response.data;
+    if (fileUrl) {
+      const response = await axios.get(fileUrl, {
+        responseType: 'arraybuffer',
+      });
+      fileBuffer = response.data;
 
-    // 2️⃣ Detect mime manually
-    let mimeType = this.detectMimeType(fileBuffer);
+      // 2️⃣ Detect mime manually
+      mimeType = this.detectMimeType(fileBuffer);
 
-    // 3️⃣ Convert JPEG → JPG (as you requested)
-    if (mimeType === 'image/jpeg') {
-      mimeType = 'image/jpg';
+      // 3️⃣ Convert JPEG → JPG (as you requested)
+      if (mimeType === 'image/jpeg') {
+        mimeType = 'image/jpg';
+      }
+
+      // 4️⃣ Generate extension
+      const extMap: any = {
+        'image/jpg': 'jpg',
+        'image/png': 'png',
+        'image/gif': 'gif',
+        'application/pdf': 'pdf',
+        'application/zip': 'zip',
+      };
+
+      fileExt = extMap[mimeType] || 'bin';
     }
-
-    // 4️⃣ Generate extension
-    const extMap: any = {
-      'image/jpg': 'jpg',
-      'image/png': 'png',
-      'image/gif': 'gif',
-      'application/pdf': 'pdf',
-      'application/zip': 'zip',
-    };
-
-    const fileExt = extMap[mimeType] || 'bin';
-    console.log(mimeType);
     try {
-      await this.mailerService.sendMail({
+      let obj = {
         to: email,
         from: this.apiConfigService.getEmailUser,
         subject: subject,
-        html: `<h2>${htmlText}</h2>`,
-        attachments: [
+        html: htmlText,
+      };
+
+      if (label === 'attached')
+        obj['attachments'] = [
           {
             filename: `attachment.${fileExt}`,
             content: fileBuffer,
             contentType: mimeType,
           },
-        ],
-      });
+        ];
+      await this.mailerService.sendMail(obj);
 
       return { message: 'Mail sent successfully' };
     } catch (error) {

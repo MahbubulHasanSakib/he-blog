@@ -16,6 +16,11 @@ export class MailController {
       fileName: 'kubernetes_certifiacate',
       email: 'mahbubulhasan179@gmail.com',
     };
-    return this.mailService.sendEmail(body, 'Test', 'Test mail');
+    return this.mailService.sendEmail(
+      body,
+      'A new post is published',
+      '<a href="https://hawkeyes-2-0.vercel.app/blog/how-to-appear-in-chatgpt-and-monitor-your-brands-performance-1/">Click here to see the post</a>',
+      'not-attached',
+    );
   }
 }

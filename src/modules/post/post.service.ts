@@ -15,6 +15,11 @@ import { IUser } from '../user/interfaces/user.interface';
 import { Tag, TagDocument } from '../tag/schema/tag.schema';
 import { Category, CategoryDocument } from '../category/schema/category.schema';
 import { ActivityService } from '../activity/activity.service';
+import {
+  Subscribe,
+  SubscribeDocument,
+} from '../subscribe/schema/subscribe.schema';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class PostService {
@@ -23,7 +28,10 @@ export class PostService {
     @InjectModel(Tag.name) private readonly tagModel: Model<TagDocument>,
     @InjectModel(Category.name)
     private readonly categoryModel: Model<CategoryDocument>,
+    @InjectModel(Subscribe.name)
+    private readonly subscribeModel: Model<SubscribeDocument>,
     private activityService: ActivityService,
+    private readonly mailService: MailService,
   ) {}
 
   // Helper to generate a unique slug
@@ -92,10 +100,52 @@ export class PostService {
         title: createdPost.title,
       });
 
+      if (createPostDto.status === PostStatus.PUBLISHED)
+        this.sendBulkEmails(createdPost.slug);
+
       return { data: createdPost };
     } catch (error) {
       throw new BadRequestException(error.message);
     }
+  }
+
+  private async sendBulkEmails(slug) {
+    const batchSize = 500;
+    let skip = 0;
+
+    while (true) {
+      // 1️⃣ Fetch batch
+      const subscribers = await this.subscribeModel
+        .find({
+          email: {
+            $in: ['mahbubulhasan179@gmail.com', 'he.shahadot@gmail.com'],
+          },
+        })
+        .skip(skip)
+        .limit(batchSize)
+        .lean();
+
+      if (subscribers.length === 0) break; // no more subscribers
+      console.log(subscribers);
+      // 2️⃣ Send emails in batch (500 at once)
+      await Promise.all(
+        subscribers.map((s) =>
+          this.mailService
+            .sendEmail(
+              { email: s.email },
+              'A new post is published',
+              `<a href="https://hawkeyes-2-0.vercel.app/blog/${slug}">Click To see post</a>`,
+              'not-attached',
+            )
+            .catch((err) => console.error(`Failed for: ${s.email}`, err)),
+        ),
+      );
+
+      // 3️⃣ Move to next batch
+      skip += batchSize;
+    }
+
+    console.log('All emails processed');
   }
 
   async findAll(query: SearchPost) {
