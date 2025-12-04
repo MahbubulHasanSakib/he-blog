@@ -1,5 +1,22 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsUrl,
+  ValidateNested,
+} from 'class-validator';
+
+export class ImageDto {
+  @IsUrl()
+  @ApiProperty()
+  original: string;
+
+  @IsUrl()
+  @ApiProperty()
+  thumb: string;
+}
 
 export class CreateLeadMagnetDto {
   @ApiProperty({
@@ -32,7 +49,7 @@ export class CreateLeadMagnetDto {
     description: 'Original uploaded file name',
   })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   fileName: string;
 
   @ApiProperty({
@@ -40,6 +57,40 @@ export class CreateLeadMagnetDto {
     description: 'File type such as pdf, jpg, png',
   })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   fileType: string;
+
+  @ApiProperty({ type: ImageDto, required: false })
+  @Type(() => ImageDto)
+  @ValidateNested()
+  @IsOptional()
+  image: ImageDto;
+
+  @ApiProperty({
+    example: 'dynamic',
+  })
+  @IsString()
+  @IsOptional()
+  type: string;
+
+  @ApiProperty({
+    example: 'buttonOneText',
+  })
+  @IsString()
+  @IsNotEmpty()
+  buttonOneText: string;
+
+  @ApiProperty({
+    example: 'buttonTwoText',
+  })
+  @IsString()
+  @IsOptional()
+  buttonTwoText: string;
+
+  @ApiProperty({
+    example: 'buttonTwoLink',
+  })
+  @IsString()
+  @IsOptional()
+  buttonTwoLink: string;
 }
