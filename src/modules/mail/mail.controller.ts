@@ -16,6 +16,6 @@ export class MailController {
       fileName: 'kubernetes_certifiacate',
       email: 'mahbubulhasan179@gmail.com',
     };
-    return this.mailService.sendEmail(body);
+    return this.mailService.sendEmail(body, 'Test', 'Test mail');
   }
 }

@@ -34,7 +34,7 @@ export class MailService {
 
     return 'application/octet-stream'; // default
   }
-  async sendEmail(body) {
+  async sendEmail(body, subject, htmlText) {
     console.log(body);
     const { fileName, fileUrl, email } = body;
 
@@ -64,8 +64,8 @@ export class MailService {
       await this.mailerService.sendMail({
         to: email,
         from: this.apiConfigService.getEmailUser,
-        subject: 'Test mail',
-        html: '<h2>Testing</h2>',
+        subject: subject,
+        html: `<h2>${htmlText}</h2>`,
         attachments: [
           {
             filename: `attachment.${fileExt}`,
