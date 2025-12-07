@@ -1,4 +1,11 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString, IsUrl } from 'class-validator';
+import {
+  IsEmail,
+  IsMongoId,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUrl,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger'; // <-- Import ApiProperty
 
 export class CreateLeadMagnetRequestDto {
@@ -6,7 +13,8 @@ export class CreateLeadMagnetRequestDto {
 
   @ApiProperty({
     example: 'john.doe@corporate.com',
-    description: 'The email address where the lead magnet document will be sent.',
+    description:
+      'The email address where the lead magnet document will be sent.',
     required: true,
   })
   @IsNotEmpty({ message: 'Email is required.' })
@@ -35,17 +43,17 @@ export class CreateLeadMagnetRequestDto {
 
   @ApiProperty({
     example: '555-123-4567',
-    description: 'The requester\'s contact phone number.',
+    description: "The requester's contact phone number.",
     required: false,
   })
   @IsOptional()
   @IsString()
   contactNo?: string;
 
-
   @ApiProperty({
     example: '2024-Q3-Report.pdf',
-    description: 'The intended file name of the lead magnet document (used in the email attachment).',
+    description:
+      'The intended file name of the lead magnet document (used in the email attachment).',
     required: true,
   })
   @IsNotEmpty({ message: 'Requested file name is required.' })
@@ -53,11 +61,22 @@ export class CreateLeadMagnetRequestDto {
   fileName: string;
 
   @ApiProperty({
-    example: 'https://blbucket.blob.core.windows.net/bl-bucket/.../report-file-id-original',
-    description: 'The publicly accessible URL pointing to the actual lead magnet file.',
+    example:
+      'https://blbucket.blob.core.windows.net/bl-bucket/.../report-file-id-original',
+    description:
+      'The publicly accessible URL pointing to the actual lead magnet file.',
     required: true,
   })
   @IsNotEmpty({ message: 'Source file URL is required.' })
   @IsUrl({}, { message: 'Must be a valid URL for the source file.' })
   fileUrl: string;
+
+  @ApiProperty({
+    example: '793150f260106381f1a82a0e',
+    description: 'The id  of lead magnet.',
+    required: true,
+  })
+  @IsOptional()
+  @IsMongoId()
+  leadMagnetId?: string;
 }

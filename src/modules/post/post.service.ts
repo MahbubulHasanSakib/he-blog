@@ -332,6 +332,12 @@ export class PostService {
           : await this.generateUniqueSlug(updatePostDto.title);
       }
 
+      if (updatePostDto.content) {
+        updateData.excerpt = updatePostDto.excerpt
+          ? updatePostDto.excerpt
+          : updatePostDto.content.substring(0, 200) + '...';
+      }
+
       if (updatePostDto.tags?.length) {
         const tagIds = [];
 

@@ -16,6 +16,7 @@ import { MailModule } from './modules/mail/mail.module';
 import { SubscribeModule } from './modules/subscribe/subscribe.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { ActivityModule } from './modules/activity/activity.module';
+import { ReportModule } from './modules/report/report.module';
 @Module({
   imports: [
     ApiConfigModule,
@@ -38,6 +39,7 @@ import { ActivityModule } from './modules/activity/activity.module';
     SubscribeModule,
     DashboardModule,
     ActivityModule,
+    ReportModule,
   ],
   controllers: [AppController],
   providers: [AppService],

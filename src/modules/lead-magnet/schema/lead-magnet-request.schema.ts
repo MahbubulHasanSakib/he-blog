@@ -1,10 +1,16 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
-
+import * as mongoose from 'mongoose';
 export type LeadDocument = HydratedDocument<LeadMagnetRequest>;
 
 @Schema({ timestamps: true, versionKey: false })
 export class LeadMagnetRequest {
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'LeadMagnet',
+  })
+  leadMagnetId: mongoose.Schema.Types.ObjectId;
+
   @Prop({ required: true, index: true })
   email: string;
 

@@ -19,5 +19,6 @@ import { MailModule } from '../mail/mail.module';
   ],
   controllers: [LeadMagnetController],
   providers: [LeadMagnetService],
+  exports: [MongooseModule],
 })
 export class LeadMagnetModule {}
