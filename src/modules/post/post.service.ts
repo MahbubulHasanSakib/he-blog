@@ -20,6 +20,8 @@ import {
   SubscribeDocument,
 } from '../subscribe/schema/subscribe.schema';
 import { MailService } from '../mail/mail.service';
+import { PostView, PostViewDocument } from './schema/post-view.schema';
+import { startAndEndOfDate } from 'src/utils/utils';
 
 @Injectable()
 export class PostService {
@@ -30,6 +32,8 @@ export class PostService {
     private readonly categoryModel: Model<CategoryDocument>,
     @InjectModel(Subscribe.name)
     private readonly subscribeModel: Model<SubscribeDocument>,
+    @InjectModel(PostView.name)
+    private readonly postViewModel: Model<PostViewDocument>,
     private activityService: ActivityService,
     private readonly mailService: MailService,
   ) {}
@@ -244,6 +248,8 @@ export class PostService {
       now.getMonth() + 1,
     ).padStart(2, '0')}`;
 
+    const { startOfToday } = startAndEndOfDate();
+
     // 2. Does the month already exist?
     const existingMonth = post.viewsByMonth?.some(
       (v) => v.month === currentMonth,
@@ -294,6 +300,19 @@ export class PostService {
         .exec();
     }
 
+    await this.postViewModel.findOneAndUpdate(
+      {
+        postId: post._id, // Use the post's ID
+        day: startOfToday,
+      },
+      {
+        $inc: { count: 1 },
+      },
+      {
+        upsert: true, // Crucial: create the document if it doesn't exist
+      },
+    );
+
     return { data: updatedPost };
   }
 
@@ -301,18 +320,14 @@ export class PostService {
   async findOneBySlug(slug: string) {
     const post = await this.postModel
       .findOne({ slug, status: PostStatus.PUBLISHED })
-      .populate('categories', 'name slug')
-      .populate('tags', 'name slug')
+      .select('_id')
       .exec();
     if (!post) {
       throw new NotFoundException(
         `Published post with slug "${slug}" not found.`,
       );
     }
-    const updatedPost = await this.postModel
-      .findOneAndUpdate({ slug }, { $inc: { views: 1 } }, { new: true })
-      .exec();
-    return { data: updatedPost };
+    return await this.findOne(post._id);
   }
 
   async update(id: string, updatePostDto: UpdatePostDto, user: IUser) {

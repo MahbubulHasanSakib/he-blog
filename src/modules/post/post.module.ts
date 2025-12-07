@@ -10,6 +10,7 @@ import { AuthModule } from '../auth/auth.module';
 import { ActivityModule } from '../activity/activity.module';
 import { SubscribeModule } from '../subscribe/subscribe.module';
 import { MailModule } from '../mail/mail.module';
+import { PostView, PostViewSchema } from './schema/post-view.schema';
 
 @Module({
   imports: [
@@ -24,6 +25,10 @@ import { MailModule } from '../mail/mail.module';
       {
         name: Post.name,
         schema: PostSchema,
+      },
+      {
+        name: PostView.name,
+        schema: PostViewSchema,
       },
     ]),
   ],

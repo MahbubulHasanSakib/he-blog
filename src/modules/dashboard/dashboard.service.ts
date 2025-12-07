@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Post, PostDocument } from '../post/schema/post.schema';
-import { Model } from 'mongoose';
+import { Model, PipelineStage } from 'mongoose';
 import {
   Subscribe,
   SubscribeDocument,
@@ -9,6 +9,7 @@ import {
 import { startAndEndOfDate } from 'src/utils/utils';
 import { Activity, ActivityDocument } from '../activity/schema/activity.schema';
 import { PostStatus } from '../post/interface/post-status.type';
+import { PostView, PostViewDocument } from '../post/schema/post-view.schema';
 
 @Injectable()
 export class DashboardService {
@@ -18,6 +19,8 @@ export class DashboardService {
     private readonly subscribeModel: Model<SubscribeDocument>,
     @InjectModel(Activity.name)
     private readonly activityModel: Model<ActivityDocument>,
+    @InjectModel(PostView.name)
+    private readonly postViewModel: Model<PostViewDocument>,
   ) {}
   async getAllAnalytics() {
     const now = new Date();
@@ -26,11 +29,7 @@ export class DashboardService {
       startOfPreviousMonth: startOfLastMonth,
       endOfPreviousMonth: endOfLastMonth,
     } = startAndEndOfDate();
-    console.log({ startOfMonth, startOfLastMonth, endOfLastMonth });
-    console.log({
-      current: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`,
-      last: `${startOfLastMonth.getFullYear()}-${String(startOfLastMonth.getMonth() + 1).padStart(2, '0')}`,
-    });
+
     // Execute all queries in parallel for better performance
     const [
       totalViewsResult,
@@ -141,22 +140,30 @@ export class DashboardService {
     const lastMonthViews = lastMonthViewsResult[0]?.lastMonthViews || 1; // Avoid division by zero
 
     // Calculate percentage change: (current month - last month) / last month * 100
-    console.log({ currentMonthViews, lastMonthViews });
-    const viewsPercentageChange =
-      lastMonthViews > 0
-        ? ((currentMonthViews - lastMonthViews) / lastMonthViews) * 100
-        : 0;
+
+    let viewsPercentageChange: number;
+
+    if (lastMonthViews === 0) {
+      viewsPercentageChange = currentMonthViews === 0 ? 0 : 100;
+    } else {
+      viewsPercentageChange =
+        ((currentMonthViews - lastMonthViews) / lastMonthViews) * 100;
+    }
 
     // Process Authors
     const totalAuthorsCount = uniqueAuthors.length;
     const newAuthors = newAuthorsThisMonth[0]?.newAuthors || 0;
 
-    // Process Subscribers
-    const subscribersGrowth =
-      lastMonthSubscribers > 0
-        ? ((totalSubscribers - lastMonthSubscribers) / lastMonthSubscribers) *
-          100
-        : 0;
+    // Subscribers growth
+    let subscribersGrowth: number;
+
+    if (lastMonthSubscribers === 0) {
+      subscribersGrowth = totalSubscribers === 0 ? 0 : 100;
+    } else {
+      subscribersGrowth =
+        ((totalSubscribers - lastMonthSubscribers) / lastMonthSubscribers) *
+        100;
+    }
 
     const roundedViewsChange = Math.round(viewsPercentageChange * 10) / 10;
     const roundedSubscribersGrowth = Math.round(subscribersGrowth * 10) / 10;
@@ -224,6 +231,101 @@ export class DashboardService {
         ],
         topPosts,
         recentActivities,
+      },
+    };
+  }
+
+  async getDailyViews(from: Date, to: Date, days?: string) {
+    // Current period aggregation
+    const currentQuery = { day: { $gte: from, $lte: to } };
+    const currentPipeline: PipelineStage[] = [
+      { $match: currentQuery },
+      {
+        $group: {
+          _id: '$day',
+          views: { $sum: '$count' },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ];
+    const currentResult = await this.postViewModel
+      .aggregate(currentPipeline)
+      .exec();
+
+    // Step: create day-wise array for current period
+    const dates: Date[] = [];
+    const currentDate = new Date(from);
+    while (currentDate <= to) {
+      dates.push(new Date(currentDate));
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    const dayWiseData = dates.map((dateObj) => {
+      const found = currentResult.find(
+        (r) => r._id.getTime() === dateObj.getTime(),
+      );
+
+      return {
+        day: dateObj,
+        views: found ? found.views : 0,
+      };
+    });
+
+    // Previous period aggregation
+    const diffMs = to.getTime() - from.getTime();
+    const prevFrom = new Date(from.getTime() - diffMs - 1);
+    const prevTo = new Date(from.getTime() - 1);
+
+    const prevQuery: any = { day: { $gte: prevFrom, $lte: prevTo } };
+    const prevPipeline: PipelineStage[] = [
+      { $match: prevQuery },
+      {
+        $group: { _id: null, totalViews: { $sum: '$count' } },
+      },
+    ];
+    const [prevResult] = await this.postViewModel
+      .aggregate(prevPipeline)
+      .exec();
+    const totalPrevViews = prevResult?.totalViews || 0;
+
+    // 3️⃣ Overview & % change
+    const totalCurrentViews = dayWiseData.reduce((sum, d) => sum + d.views, 0);
+    let label = '';
+    switch (days) {
+      case '24 hours':
+        label = 'vs last 24 hours';
+        break;
+      case '7 days':
+        label = 'vs last 7 days';
+        break;
+      case '30 days':
+        label = 'vs last 30 days';
+        break;
+      case '12 months':
+        label = 'vs last 12 months';
+        break;
+      default:
+        label = 'vs previous period';
+    }
+
+    let percentageChange: string;
+
+    if (totalPrevViews === 0) {
+      percentageChange =
+        totalCurrentViews === 0 ? `0% ${label}` : `↑100% ${label}`;
+    } else {
+      let change =
+        ((totalCurrentViews - totalPrevViews) / totalPrevViews) * 100;
+      change = Math.round(change * 10) / 10; // 1 decimal
+      percentageChange =
+        (change >= 0 ? '↑' : '↓') + Math.abs(change) + `% ${label}`;
+    }
+
+    return {
+      data: {
+        overview: totalCurrentViews,
+        change: percentageChange, // ↑ positive, ↓ negative
+        dayWiseData,
       },
     };
   }
