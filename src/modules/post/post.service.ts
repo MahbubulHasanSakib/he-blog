@@ -116,11 +116,7 @@ export class PostService {
     while (true) {
       // 1️⃣ Fetch batch
       const subscribers = await this.subscribeModel
-        .find({
-          email: {
-            $in: ['mahbubulhasan179@gmail.com', 'he.shahadot@gmail.com'],
-          },
-        })
+        .find()
         .skip(skip)
         .limit(batchSize)
         .lean();
