@@ -130,7 +130,7 @@ export class PostService {
             .sendEmail(
               { email: s.email },
               'A new post is published',
-              `<a href="https://hawkeyes-2-0.vercel.app/blog/${slug}">Click To see post</a>`,
+              `<a href="https://www.hawkeyesdigital.com/blog/${slug}">Click to see the post</a>`,
               'not-attached',
             )
             .catch((err) => console.error(`Failed for: ${s.email}`, err)),
