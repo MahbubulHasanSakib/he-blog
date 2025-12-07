@@ -9,10 +9,25 @@ import {
   IsDateString,
   MinLength,
   IsDate,
+  ValidateNested,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { PostStatus } from '../interface/post-status.type';
+import { Type } from 'class-transformer';
 
+class FaqItemDto {
+  @ApiProperty({ example: 'What is AI merchandising?' })
+  @IsString()
+  @IsNotEmpty()
+  question: string;
+
+  @ApiProperty({
+    example: 'AI merchandising automates product placement...',
+  })
+  @IsString()
+  @IsNotEmpty()
+  answer: string;
+}
 export class CreatePostDto {
   @ApiProperty({
     example: 'Migrating to AI-Powered Trade Merchandising: A 101 Guide',
@@ -120,4 +135,37 @@ export class CreatePostDto {
   // Array of MongoDB Category IDs
   @IsMongoId({ each: true })
   contributors?: string[];
+
+  @ApiProperty({
+    type: [FaqItemDto],
+    example: [
+      {
+        question: 'What is trade merchandising?',
+        answer: 'It refers to in-store product visibility and execution...',
+      },
+    ],
+    required: false,
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => FaqItemDto)
+  @IsOptional()
+  faqs?: FaqItemDto[];
+
+  @ApiProperty({
+    example: 'https://cdn.mysite.com/lead-magnets/ai-guide.pdf',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  staticLeadMagnet?: string;
+
+  @ApiProperty({
+    example:
+      'A detailed guide explaining how businesses can migrate to AI-based merchandising...',
+    required: true,
+  })
+  @IsString()
+  @IsNotEmpty()
+  description: string;
 }

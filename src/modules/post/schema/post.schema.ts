@@ -101,6 +101,23 @@ export class Post {
     modifier: mongoose.Schema.Types.ObjectId;
     modifiedAt: Date;
   }[];
+
+  @Prop({
+    type: [
+      {
+        question: String,
+        answer: String,
+      },
+    ],
+    default: [],
+  })
+  faqs: { question: string; answer: string }[];
+
+  @Prop({ type: String, required: false })
+  staticLeadMagnet: string;
+
+  @Prop({ type: String })
+  description: string;
 }
 
 export const PostSchema = SchemaFactory.createForClass(Post);
