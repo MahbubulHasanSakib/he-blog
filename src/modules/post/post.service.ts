@@ -21,8 +21,14 @@ import {
 } from '../subscribe/schema/subscribe.schema';
 import { MailService } from '../mail/mail.service';
 import { PostView, PostViewDocument } from './schema/post-view.schema';
-import { startAndEndOfDate } from 'src/utils/utils';
+import { startAndEndOfDate, tz } from 'src/utils/utils';
+import * as dayjs from 'dayjs';
+import * as utc from 'dayjs/plugin/utc';
+import * as timezone from 'dayjs/plugin/timezone';
+import { User, UserDocument } from '../user/schemas/user.schema';
 
+dayjs.extend(utc);
+dayjs.extend(timezone);
 @Injectable()
 export class PostService {
   constructor(
@@ -34,6 +40,8 @@ export class PostService {
     private readonly subscribeModel: Model<SubscribeDocument>,
     @InjectModel(PostView.name)
     private readonly postViewModel: Model<PostViewDocument>,
+    @InjectModel(User.name)
+    private readonly userModel: Model<UserDocument>,
     private activityService: ActivityService,
     private readonly mailService: MailService,
   ) {}
@@ -105,7 +113,19 @@ export class PostService {
       });
 
       if (createPostDto.status === PostStatus.PUBLISHED)
-        this.sendBulkEmails(createdPost.slug);
+        this.sendBulkEmails({
+          postId: createdPost._id,
+          title: createdPost.title,
+          slug: createdPost.slug,
+          categories: createdPost.categories,
+          authorId: createdPost.authorId,
+          createdAt: createdPost['createdAt'],
+          readTime: '5 mins',
+          excerpt:
+            createdPost.excerpt ||
+            createdPost.content.substring(0, 200) + '...',
+          featuredImageUrl: createdPost.featuredImageUrl,
+        });
 
       return { data: createdPost };
     } catch (error) {
@@ -113,7 +133,7 @@ export class PostService {
     }
   }
 
-  private async sendBulkEmails(slug) {
+  private async sendBulkEmails(info) {
     const batchSize = 500;
     let skip = 0;
 
@@ -125,8 +145,58 @@ export class PostService {
         .limit(batchSize)
         .lean();
 
-      if (subscribers.length === 0) break; // no more subscribers
-      console.log(subscribers);
+      if (subscribers.length === 0) break;
+
+      let author = await this.userModel
+        .findOne({ _id: info.authorId })
+        .select('name image');
+
+      let cats = await this.categoryModel
+        .find({ _id: { $in: info.categories } })
+        .select('name');
+
+      const joinedCats = cats.map((item) => item.name).join(', ');
+
+      const lastTwoPosts = await this.postModel
+        .find({ _id: { $ne: info.postId }, status: PostStatus.PUBLISHED })
+        .sort({ createdAt: -1 })
+        .limit(2)
+        .select('_id slug title featuredImageUrl');
+
+      //console.log(lastTwoPosts);
+
+      const baseSiteUrl = 'https://www.hawkeyesdigital.com/blog/';
+
+      const relatedPostsHtml = lastTwoPosts
+        .map(
+          (post, index) => `
+      <td class="col-2-half" width="50%" 
+          style="padding-${index === 0 ? 'right' : 'left'}: 10px; padding-bottom: 20px; vertical-align: top;">
+
+        <a href=${baseSiteUrl + post.slug}
+           target="_blank" 
+           style="text-decoration: none; display: block;">
+
+          <img src="${post.featuredImageUrl}" 
+               alt="${post.title}" 
+               width="100%" 
+               style="display: block; width: 100%; height: auto; border: 0; border-radius: 4px;">
+
+          <p style="font-size: 15px; color: white; font-weight: bold; margin: 10px 0 5px 0;">
+            ${post.title}
+          </p>
+
+          <p style="font-size: 12px; margin: 0;">
+                            <a href=${baseSiteUrl + post.slug} target="_blank" style="color: #ffc72c; text-decoration: none; font-weight: bold;">
+                                READ ARTICLE &rarr;
+                            </a>
+                        </p>
+        </a>
+      </td>
+    `,
+        )
+        .join('');
+
       // 2️⃣ Send emails in batch (500 at once)
       await Promise.all(
         subscribers.map((s) =>
@@ -134,7 +204,165 @@ export class PostService {
             .sendEmail(
               { email: s.email },
               'A new post is published',
-              `<a href="https://www.hawkeyesdigital.com/blog/${slug}">Click to see the post</a>`,
+              `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Blog Post Notification - HawkEyes Digital</title>
+    
+    <style>
+        /* Internal CSS for general layout and responsiveness */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        
+        /* Media Query for Mobile (max-width: 600px) */
+        @media only screen and (max-width: 600px) {
+            .container {
+                width: 100% !important;
+                min-width: 100% !important;
+            }
+            .content-padding {
+                padding-left: 15px !important;
+                padding-right: 15px !important;
+            }
+            .col-2-half {
+                width: 100% !important;
+                display: block !important;
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body style="margin: 0; padding: 0;">
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="min-width: 100%;">
+        <tr>
+            <td align="center" style="padding: 20px 0;">
+                
+                <table class="container" role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%; background-color: #1a1a1a;">
+                    
+                    <tr>
+                        <td align="center" style="padding: 30px 25px 20px;">
+                            <p style="font-size: 24px; color: #ffc72c; font-weight: bold; margin-bottom: 5px; margin-top: 0;">
+                                <span style="font-size: 30px;">&#x2B50;</span> HawkEyes Digital
+                            </p>
+                            <p style="font-size: 12px; color: #aaaaaa; text-transform: uppercase; margin-top: 0; margin-bottom: 0;">
+                                NEW BLOG POST JUST PUBLISHED
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="content-padding" style="padding: 0 40px; color: #cccccc; font-size: 15px;">
+                            <p style="margin-bottom: 15px; margin-top: 0;">
+                                Hi,
+                            </p>
+                            <p style="margin-bottom: 20px;">
+                                We've just published a new article on the HawkEyes blog that you might find useful.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="content-padding" align="center" style="padding: 0 40px;">
+                            
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #242424; border-radius: 8px;">
+                                <tr>
+                                    <td align="center" style="padding: 20px;">
+                                        
+                                        <p align="left" style="font-size: 11px; color: #ffc72c; background-color: #383838; display: inline-block; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px; margin-top: 0;">
+                                           ${joinedCats}
+                                        </p>
+                                        
+                                        <img src=${info.featuredImageUrl} alt="Blog Post Featured Image" width="100%" style="display: block; width: 100%; max-width: 560px; height: auto; border: 0; border-radius: 4px;">
+
+                                        <div style="padding: 20px 0 0;">
+                                            
+                                            <h2 style="font-size: 24px; color: white; margin: 0 0 10px 0; font-weight: bold; text-align: left;">
+                                                ${info.title}
+                                            </h2>
+                                            
+                                            <p style="font-size: 13px; color: #888888; margin-bottom: 20px; text-align: left;">
+                                                👤 ${author.name} &nbsp; | &nbsp;
+                                                📅 ${dayjs(info.createdAt).tz(tz).format('DD-MM-YYYY')} &nbsp; | &nbsp;
+                                                ⏱️ ${info.readTime}
+                                            </p>
+
+                                            <div style="font-size: 16px; color: #cccccc; margin-bottom: 30px; text-align: left;">
+                                           ${info.excerpt}
+                                           </div>
+                                            
+                                            <a href=${baseSiteUrl + info.slug} target="_blank" style="display: block; text-decoration: none; background-color: #ffc72c; color: #1a1a1a; padding: 15px 25px; border-radius: 6px; font-weight: bold; font-size: 16px; text-align: center;">
+                                                Read Full Article
+                                            </a>
+                                            
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                            </td>
+                    </tr>
+                    
+                    <tr>
+                    
+                        <td align="center" style="padding: 40px 40px 20px;">
+                            <p style="font-size: 12px; color: #aaaaaa; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; margin-top: 0;">
+                                YOU MIGHT ALSO LIKE
+                            </p>
+                            
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    ${relatedPostsHtml}
+                                </tr>
+                            </table>
+                            
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td align="center" style="padding: 20px 40px 40px; background-color: #121212;">
+                            
+                             <p style="margin: 20px 0 0 0; text-align: center;">
+            <a href="[URL_LINKEDIN]" target="_blank" style="margin: 0 5px;">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTRHqvUv15Yv-jy95oOHmX9eCXRlfjW8jZIag&s" alt="LinkedIn" width="24" height="24" style="vertical-align: middle;">
+            </a>
+            <a href="[URL_FACEBOOK]" target="_blank" style="margin: 0 5px;">
+                <img src="https://img.freepik.com/premium-vector/social-media-icon-illustration-facebook-facebook-icon-vector-illustration_561158-2134.jpg?semt=ais_se_enriched&w=740&q=80" alt="Facebook" width="24" height="24" style="vertical-align: middle;">
+            </a>
+            <a href="[URL_TWITTER]" target="_blank" style="margin: 0 5px;">
+                <img src="https://static.vecteezy.com/system/resources/previews/016/716/467/non_2x/twitter-icon-free-png.png" alt="Twitter" width="24" height="24" style="vertical-align: middle;">
+            </a>
+        </p>
+                            
+                            <p style="font-size: 14px; color: #cccccc; margin: 0 0 15px 0;">
+                                HawkEyes Digital Monitoring Ltd<br>
+                                2nd Floor, House 09, Road 12, Sector 1<br>
+                                Uttara, Dhaka 1230
+                            </p>
+                            
+                            <p style="font-size: 12px; margin: 0 0 20px 0;">
+                                <a href="[URL_UNSUBSCRIBE]" target="_blank" style="color: #ffc72c; text-decoration: underline;">
+                                    Unsubscribe from blog updates
+                                </a>
+                            </p>
+                            
+                            <p style="font-size: 12px; color: #666666; margin: 0;">
+                                &copy; 2025 HawkEyes Digital. All rights reserved.
+                            </p>
+                        </td>
+                    </tr>
+
+                </table>
+                </td>
+        </tr>
+    </table>
+    </body>
+</html>`,
               'not-attached',
             )
             .catch((err) => console.error(`Failed for: ${s.email}`, err)),

@@ -14,6 +14,13 @@ import {
   SubscribeDocument,
 } from '../subscribe/schema/subscribe.schema';
 
+import * as dayjs from 'dayjs';
+import * as utc from 'dayjs/plugin/utc';
+import * as timezone from 'dayjs/plugin/timezone';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 @Injectable()
 export class ReportService {
   constructor(
