@@ -247,15 +247,23 @@ export class PostService {
                 <table class="container" role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%; background-color: #1a1a1a;">
                     
                     <tr>
-                        <td align="center" style="padding: 30px 25px 20px;">
-                            <p style="font-size: 24px; color: #ffc72c; font-weight: bold; margin-bottom: 5px; margin-top: 0;">
-                                <span style="font-size: 30px;">&#x2B50;</span> HawkEyes Digital
-                            </p>
-                            <p style="font-size: 12px; color: #aaaaaa; text-transform: uppercase; margin-top: 0; margin-bottom: 0;">
-                                NEW BLOG POST JUST PUBLISHED
-                            </p>
-                        </td>
-                    </tr>
+    <td align="center" style="padding: 30px 25px 20px;">
+        
+        <a href="[URL_TO_YOUR_WEBSITE]" target="_blank" style="display: inline-block;">
+            <img 
+                src="https://mlenzdevsa.blob.core.windows.net/mlenz-dev-data/uploads/logo/02-02-2024/logo.png-original" 
+                alt="HawkEyes Digital Logo" 
+                width="150" 
+                height="auto" 
+                style="display: block; border: 0; max-width: 150px; margin: 0 auto 5px;"
+            >
+        </a>
+        
+        <p style="font-size: 12px; color: #aaaaaa; text-transform: uppercase; margin-top: 0; margin-bottom: 0;">
+            NEW BLOG POST JUST PUBLISHED
+        </p>
+    </td>
+</tr>
                     
                     <tr>
                         <td class="content-padding" style="padding: 0 40px; color: #cccccc; font-size: 15px;">
@@ -328,14 +336,11 @@ export class PostService {
                         <td align="center" style="padding: 20px 40px 40px; background-color: #121212;">
                             
                              <p style="margin: 20px 0 0 0; text-align: center;">
-            <a href="[URL_LINKEDIN]" target="_blank" style="margin: 0 5px;">
+            <a href="https://www.linkedin.com/company/hedigital-tech/" target="_blank" style="margin: 0 5px;">
                 <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTRHqvUv15Yv-jy95oOHmX9eCXRlfjW8jZIag&s" alt="LinkedIn" width="24" height="24" style="vertical-align: middle;">
             </a>
-            <a href="[URL_FACEBOOK]" target="_blank" style="margin: 0 5px;">
+            <a href="https://www.facebook.com/hedigital.tech/" target="_blank" style="margin: 0 5px;">
                 <img src="https://img.freepik.com/premium-vector/social-media-icon-illustration-facebook-facebook-icon-vector-illustration_561158-2134.jpg?semt=ais_se_enriched&w=740&q=80" alt="Facebook" width="24" height="24" style="vertical-align: middle;">
-            </a>
-            <a href="[URL_TWITTER]" target="_blank" style="margin: 0 5px;">
-                <img src="https://static.vecteezy.com/system/resources/previews/016/716/467/non_2x/twitter-icon-free-png.png" alt="Twitter" width="24" height="24" style="vertical-align: middle;">
             </a>
         </p>
                             
