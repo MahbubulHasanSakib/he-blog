@@ -203,7 +203,7 @@ export class PostService {
           this.mailService
             .sendEmail(
               { email: s.email },
-              'A new post is published',
+              `New Blog Post Published: ${info.title}`,
               `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -268,7 +268,7 @@ export class PostService {
                     <tr>
                         <td class="content-padding" style="padding: 0 40px; color: #cccccc; font-size: 15px;">
                             <p style="margin-bottom: 15px; margin-top: 0;">
-                                Hi,
+                                Hi There,
                             </p>
                             <p style="margin-bottom: 20px;">
                                 We've just published a new article on the HawkEyes blog that you might find useful.
