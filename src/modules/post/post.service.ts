@@ -660,6 +660,21 @@ export class PostService {
       if (!updatedPost) {
         throw new NotFoundException('Post not found for update.');
       }
+      if (updateData.status && updateData.status === PostStatus.PUBLISHED) {
+        this.sendBulkEmails({
+          postId: updatedPost._id,
+          title: updatedPost.title,
+          slug: updatedPost.slug,
+          categories: updatedPost.categories,
+          authorId: updatedPost.authorId,
+          createdAt: updatedPost['createdAt'],
+          readTime: '5 mins',
+          excerpt:
+            updatedPost.excerpt ||
+            updatedPost.content.substring(0, 200) + '...',
+          featuredImageUrl: updatedPost.featuredImageUrl,
+        });
+      }
 
       await session.commitTransaction();
       session.endSession();
