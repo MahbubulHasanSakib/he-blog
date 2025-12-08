@@ -120,7 +120,7 @@ export class PostService {
           categories: createdPost.categories,
           authorId: createdPost.authorId,
           createdAt: createdPost['createdAt'],
-          readTime: '5 mins',
+          readTime: this.calculateReadTime(createdPost.content),
           excerpt:
             createdPost.excerpt ||
             createdPost.content.substring(0, 200) + '...',
@@ -132,6 +132,27 @@ export class PostService {
       throw new BadRequestException(error.message);
     }
   }
+
+  private calculateReadTime = (content, wordsPerMinute = 100) => {
+    if (!content || typeof content !== 'string') {
+      return '1 min';
+    }
+
+    // Strip HTML tags
+    const strippedContent = content.replace(/<[^>]*>/g, '');
+
+    // Count words (split by whitespace and filter empty strings)
+    const words = strippedContent
+      .trim()
+      .split(/\s+/)
+      .filter((word) => word.length > 0);
+    const wordCount = words.length;
+
+    // Calculate minutes (round up to at least 1 minute)
+    const minutes = Math.max(1, Math.ceil(wordCount / wordsPerMinute));
+
+    return `${minutes} mins`;
+  };
 
   private async sendBulkEmails(info) {
     const batchSize = 500;
@@ -668,7 +689,7 @@ export class PostService {
           categories: updatedPost.categories,
           authorId: updatedPost.authorId,
           createdAt: updatedPost['createdAt'],
-          readTime: '5 mins',
+          readTime: this.calculateReadTime(updatedPost.content),
           excerpt:
             updatedPost.excerpt ||
             updatedPost.content.substring(0, 200) + '...',
