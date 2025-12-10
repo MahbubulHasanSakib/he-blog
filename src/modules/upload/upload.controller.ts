@@ -79,7 +79,7 @@ export class UploadController {
     const basePath = this.apiConfigService.getBasePath;
     const fileKey = `${basePath}/${param.folder}/${param.date}/${file.originalname}`;
 
-    if (/(png|jpeg|jpg)/i.test(file.mimetype)) {
+    if (/(png|jpeg|jpg|webp)/i.test(file.mimetype)) {
       const originalKey = `${fileKey}-original`;
       const thumbKey = `${fileKey}-thumb`;
 
