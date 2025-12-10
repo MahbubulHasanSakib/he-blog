@@ -373,7 +373,7 @@ export class PostService {
                             
                             <p style="font-size: 14px; color: #cccccc; margin: 0 0 15px 0;">
                                 HawkEyes Digital Monitoring Ltd<br>
-                                2nd Floor, House 09, Road 12, Sector 1<br>
+                                2nd Floor, House 05, Road 12, Sector 1<br>
                                 Uttara, Dhaka 1230
                             </p>
                             
