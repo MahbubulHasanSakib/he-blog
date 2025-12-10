@@ -126,7 +126,7 @@ export class UploadController {
     const basePath = this.apiConfigService.getBasePath;
     const fileKey = `${basePath}/${param.folder}/${param.date}/${uploadFileDto.name}`;
 
-    if (/(png|jpeg)/i.test(uploadFileDto.type)) {
+    if (/(png|jpeg|jpg|webp)/i.test(uploadFileDto.type)) {
       const originalKey = `${fileKey}-original`;
       const thumbKey = `${fileKey}-thumb`;
       const thumbnailImage = await sharp(buffer).resize(200, 200).toBuffer();

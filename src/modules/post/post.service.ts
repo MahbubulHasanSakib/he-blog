@@ -26,6 +26,7 @@ import * as dayjs from 'dayjs';
 import * as utc from 'dayjs/plugin/utc';
 import * as timezone from 'dayjs/plugin/timezone';
 import { User, UserDocument } from '../user/schemas/user.schema';
+import { validatePublishRequirements } from './utils/helper';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -60,6 +61,10 @@ export class PostService {
 
   // Create a new post
   async create(createPostDto: CreatePostDto, user: any) {
+    if (createPostDto.status === PostStatus.PUBLISHED) {
+      validatePublishRequirements(createPostDto);
+    }
+
     try {
       // 1️⃣ Generate unique post slug
       const slug = await this.generateUniqueSlug(
@@ -79,15 +84,16 @@ export class PostService {
         );
         tagIds.push(tag._id);
       }
-
+      if (createPostDto.excerpt || createPostDto.content) {
+        createPostDto.excerpt =
+          createPostDto.excerpt ||
+          createPostDto.content.substring(0, 200) + '...';
+      }
       const createdPost = await this.postModel.create({
         ...createPostDto,
         authorId: user._id,
         slug,
         tags: tagIds,
-        excerpt:
-          createPostDto.excerpt ||
-          createPostDto.content.substring(0, 200) + '...',
       });
 
       // 4️⃣ Increment category post count
@@ -588,6 +594,28 @@ export class PostService {
     const session = await this.postModel.db.startSession();
     session.startTransaction();
 
+    const existingPost = await this.postModel
+      .findOne({ _id: id, deletedAt: null })
+      .session(session);
+
+    if (!existingPost) {
+      throw new NotFoundException('Post not found');
+    }
+
+    // Merge existing + update fields
+    const finalPost = {
+      ...existingPost.toObject(),
+      ...updatePostDto,
+    };
+    //console.log(finalPost);
+    // Validate publish requirements
+    if (
+      updatePostDto.status === PostStatus.PUBLISHED ||
+      finalPost.status === PostStatus.PUBLISHED
+    ) {
+      validatePublishRequirements(finalPost);
+    }
+
     try {
       const updateData: any = { ...updatePostDto };
 
@@ -681,7 +709,12 @@ export class PostService {
       if (!updatedPost) {
         throw new NotFoundException('Post not found for update.');
       }
-      if (updateData.status && updateData.status === PostStatus.PUBLISHED) {
+      if (
+        (updateData.status && updateData.status === PostStatus.PUBLISHED) ||
+        (!updateData.status &&
+          updateData.title &&
+          updatedPost.status === PostStatus.PUBLISHED)
+      ) {
         this.sendBulkEmails({
           postId: updatedPost._id,
           title: updatedPost.title,

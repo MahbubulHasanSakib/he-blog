@@ -49,7 +49,7 @@ export class CreatePostDto {
   })
   @IsString()
   @IsOptional()
-  slug?: string;
+  slug: string;
 
   @ApiProperty({
     example:
@@ -57,7 +57,7 @@ export class CreatePostDto {
     description: 'The full HTML or Markdown content of the post.',
   })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   content: string;
 
   @ApiProperty({
@@ -121,7 +121,7 @@ export class CreatePostDto {
     required: false,
   })
   @IsEnum(PostStatus)
-  @IsOptional()
+  @IsNotEmpty()
   status?: PostStatus;
 
   @ApiProperty({
@@ -166,6 +166,6 @@ export class CreatePostDto {
     required: true,
   })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   description: string;
 }

@@ -21,10 +21,10 @@ export class Post {
   })
   slug: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   content: string;
 
-  @Prop({ default: null })
+  @Prop({ required: false })
   excerpt: string;
 
   @Prop({
@@ -32,6 +32,7 @@ export class Post {
     enum: PostStatus,
     default: PostStatus.DRAFT,
     index: true,
+    required: true,
   })
   status: PostStatus;
 
@@ -43,24 +44,27 @@ export class Post {
   })
   authorId: mongoose.Schema.Types.ObjectId;
 
-  @Prop({ default: null })
+  @Prop({ required: false })
   featuredImageUrl: string;
 
   @Prop({
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }],
     default: [],
+    required: false,
   })
   categories: mongoose.Schema.Types.ObjectId[];
 
   @Prop({
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tag' }],
     default: [],
+    required: false,
   })
   tags: mongoose.Schema.Types.ObjectId[];
 
   @Prop({
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     default: [],
+    required: false,
   })
   contributors: mongoose.Schema.Types.ObjectId[];
 
@@ -110,13 +114,14 @@ export class Post {
       },
     ],
     default: [],
+    required: false,
   })
   faqs: { question: string; answer: string }[];
 
   @Prop({ type: String, required: false })
   staticLeadMagnet: string;
 
-  @Prop({ type: String })
+  @Prop({ type: String, required: false })
   description: string;
 }
 
