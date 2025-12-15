@@ -48,7 +48,7 @@ export class CreatePostDto {
     required: false,
   })
   @IsString()
-  @IsOptional()
+  @IsNotEmpty()
   slug: string;
 
   @ApiProperty({
@@ -168,4 +168,18 @@ export class CreatePostDto {
   @IsString()
   @IsOptional()
   description: string;
+
+  @ApiProperty({
+    example: 'SEO Title',
+  })
+  @IsString()
+  @IsOptional()
+  seoTitle: string;
+
+  @ApiProperty({
+    example: 'Meta description for SEO purposes.',
+  })
+  @IsString()
+  @IsOptional()
+  metaDescription: string;
 }

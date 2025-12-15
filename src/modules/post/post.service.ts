@@ -47,29 +47,20 @@ export class PostService {
     private readonly mailService: MailService,
   ) {}
 
-  // Helper to generate a unique slug
-  private async generateUniqueSlug(title: string): Promise<string> {
-    let baseSlug = slugify(title, { lower: true, strict: true });
-    let slug = baseSlug;
-    let counter = 1;
-
-    while (await this.postModel.exists({ slug })) {
-      slug = `${baseSlug}-${counter++}`;
-    }
-    return slug;
-  }
-
   // Create a new post
-  async create(createPostDto: CreatePostDto, user: any) {
+  async create(createPostDto: CreatePostDto, user: IUser) {
     if (createPostDto.status === PostStatus.PUBLISHED) {
       validatePublishRequirements(createPostDto);
     }
 
     try {
-      // 1️⃣ Generate unique post slug
-      const slug = await this.generateUniqueSlug(
-        createPostDto.slug || createPostDto.title,
-      );
+      const slugExists = await this.postModel.findOne({
+        slug: createPostDto.slug,
+      });
+      if (slugExists)
+        throw new BadRequestException(
+          'Slug already exists. Please choose a different slug.',
+        );
 
       // 2️⃣ Process tags (upsert)
       const tagIds = [];
@@ -92,7 +83,6 @@ export class PostService {
       const createdPost = await this.postModel.create({
         ...createPostDto,
         authorId: user._id,
-        slug,
         tags: tagIds,
       });
 
@@ -619,10 +609,14 @@ export class PostService {
     try {
       const updateData: any = { ...updatePostDto };
 
-      if (updatePostDto.title) {
-        updateData.slug = updatePostDto.slug
-          ? await this.generateUniqueSlug(updatePostDto.slug)
-          : await this.generateUniqueSlug(updatePostDto.title);
+      if (updatePostDto.slug) {
+        const slugExists = await this.postModel.findOne({
+          slug: updatePostDto.slug,
+        });
+        if (slugExists)
+          throw new BadRequestException(
+            'Slug already exists. Please choose a different slug.',
+          );
       }
 
       if (updatePostDto.content) {
