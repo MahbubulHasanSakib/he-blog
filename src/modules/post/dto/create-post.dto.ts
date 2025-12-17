@@ -93,6 +93,14 @@ export class CreatePostDto {
   featuredImageUrl?: string;
 
   @ApiProperty({
+    example: 'Featured Image Alt Text',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  featuredImageAlt?: string;
+
+  @ApiProperty({
     type: [String],
     example: ['654321098765432109871111', '654321098765432109872222'],
     description: 'Array of MongoDB ObjectIds referencing Categories.',
