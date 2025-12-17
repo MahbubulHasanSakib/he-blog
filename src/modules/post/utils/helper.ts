@@ -3,6 +3,7 @@ import { BadRequestException } from '@nestjs/common';
 export function validatePublishRequirements(post) {
   const requiredForPublish = [
     'title',
+    'slug',
     'status',
     'content',
     'featuredImageUrl',

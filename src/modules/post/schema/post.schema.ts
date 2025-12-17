@@ -123,6 +123,12 @@ export class Post {
 
   @Prop({ type: String, required: false })
   description: string;
+
+  @Prop({ type: String, required: false })
+  seoTitle: string;
+
+  @Prop({ type: String, required: false })
+  metaDescription: string;
 }
 
 export const PostSchema = SchemaFactory.createForClass(Post);
