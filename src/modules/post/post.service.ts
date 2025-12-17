@@ -486,12 +486,25 @@ export class PostService {
     };
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, fromSlug: boolean = false) {
     // 1. Check post exists
-    const post = await this.postModel.findById(id);
+    const post = await this.postModel
+      .findById(id)
+      .populate('categories', 'name slug')
+      .populate('tags', 'name slug')
+      .populate('contributors', 'name image')
+      .populate('author', 'name image');
+
     if (!post) {
       throw new NotFoundException(`Post with ID "${id}" not found.`);
     }
+
+    // ❗ If not viewed via slug, return directly
+    if (!fromSlug) {
+      return { data: post };
+    }
+
+    // ===== VIEW UPDATE LOGIC RUNS ONLY IF fromSlug = true =====
 
     const now = new Date();
     const currentMonth = `${now.getFullYear()}-${String(
@@ -577,7 +590,7 @@ export class PostService {
         `Published post with slug "${slug}" not found.`,
       );
     }
-    return await this.findOne(post._id);
+    return await this.findOne(post._id, true);
   }
 
   async update(id: string, updatePostDto: UpdatePostDto, user: IUser) {
