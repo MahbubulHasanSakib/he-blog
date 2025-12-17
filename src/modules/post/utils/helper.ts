@@ -7,6 +7,7 @@ export function validatePublishRequirements(post) {
     'status',
     'content',
     'featuredImageUrl',
+    'featuredImageAlt',
     'categories',
     'tags',
     'contributors',

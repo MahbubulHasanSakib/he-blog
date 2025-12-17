@@ -47,6 +47,9 @@ export class Post {
   @Prop({ required: false })
   featuredImageUrl: string;
 
+  @Prop({ required: false })
+  featuredImageAlt: string;
+
   @Prop({
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }],
     default: [],
