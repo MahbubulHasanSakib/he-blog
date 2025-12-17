@@ -471,6 +471,7 @@ export class PostService {
                 createdAt: 1,
                 updatedAt: 1,
                 lastEdited: { $ifNull: [{ $last: '$editHistory' }, null] },
+                description: 1,
               },
             },
           ],
