@@ -9,7 +9,7 @@ export type PostDocument = Post & Document;
 
 @Schema({ timestamps: true, versionKey: false })
 export class Post {
-  @Prop({ required: true, unique: true, trim: true })
+  @Prop({ required: true, trim: true })
   title: string;
 
   @Prop({
