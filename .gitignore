@@ -141,4 +141,11 @@ dist
 # SvelteKit build / generate output
 .svelte-kit
 
+#kubectl
+deployment.yml
+docker-compose.yml
+Dockerfile
+secret.yml
+service.yml
+
 # End of https://www.toptal.com/developers/gitignore/api/node

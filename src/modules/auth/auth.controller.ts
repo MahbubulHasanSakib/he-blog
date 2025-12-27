@@ -7,6 +7,7 @@ import {
   UseInterceptors,
   HttpCode,
   HttpStatus,
+  BadRequestException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserSignInDto } from './dto/create-user-signin.dto';
@@ -25,6 +26,18 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   userSignIn(@Body() createUserSignInDto: CreateUserSignInDto) {
     return this.authService.userSignIn(createUserSignInDto);
+  }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  async refresh(@Req() req: Request) {
+    // accept refresh token in a dedicated header to avoid collision with access token
+    // clients should send: x-refresh-token: <refresh_token>
+    const token = (req.headers['x-refresh-token'] as string) ?? req.get('x-refresh-token');
+    if (!token) {
+      throw new BadRequestException('Invalid refresh token');
+    }
+    return this.authService.refresh(token);
   }
 
   @ApiBearerAuth()
