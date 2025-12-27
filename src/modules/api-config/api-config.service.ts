@@ -20,6 +20,14 @@ export class ApiConfigService {
     return this.configService.get('JWT_EXPIRE');
   }
 
+  get getJwtRefreshSecret(): string {
+    return this.configService.get('JWT_REFRESH_SECRET');
+  }
+
+  get getJwtRefreshExpire(): string {
+    return this.configService.get('JWT_REFRESH_EXPIRE');
+  }
+
   get getAzureConnectionString(): string {
     return this.configService.get('AZURE_STORAGE_CONNECTION_STRING');
   }

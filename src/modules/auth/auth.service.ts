@@ -49,9 +49,19 @@ export class AuthService {
 
     const access_token = await this.jwtService.signAsync({ sub, ...data });
 
+    // create refresh token (signed with refresh secret & expiry)
+    const refresh_token = await this.jwtService.signAsync({ sub }, {
+      secret: this.apiConfigService.getJwtRefreshSecret,
+      expiresIn: this.apiConfigService.getJwtRefreshExpire,
+    });
+
+    // NOTE: refresh tokens are NOT stored in the user collection per request
+    // (stateless refresh tokens). The token is returned to the client only.
+
     return {
       data: {
         access_token,
+        refresh_token,
         payload: { id: sub, ...data },
         message: 'Logged in successfully',
       },
@@ -69,5 +79,46 @@ export class AuthService {
       data: null,
       message: 'Logged out successfully',
     };
+  }
+
+  async refresh(refresh_token: string) {
+    try {
+      const payload: any = await this.jwtService.verifyAsync(refresh_token, {
+        secret: this.apiConfigService.getJwtRefreshSecret,
+      });
+      const user: IUser = await this.userModel.findById(payload.sub).lean();
+
+      if (!user) {
+        throw new ForbiddenException('Invalid refresh token');
+      }
+
+      const {
+        _id: sub,
+        password,
+        deletedAt,
+        createdAt,
+        updatedAt,
+        ...data
+      } = user;
+
+      const access_token = await this.jwtService.signAsync({ sub, ...data });
+
+      // issue a new refresh token (rotation) but do NOT persist it server-side
+      const new_refresh_token = await this.jwtService.signAsync({ sub }, {
+        secret: this.apiConfigService.getJwtRefreshSecret,
+        expiresIn: this.apiConfigService.getJwtRefreshExpire,
+      });
+
+      return {
+        data: {
+          access_token,
+          refresh_token: new_refresh_token,
+          payload: { id: sub, ...data },
+          message: 'Token refreshed',
+        },
+      };
+    } catch (error) {
+      throw new ForbiddenException('Invalid refresh token');
+    }
   }
 }
