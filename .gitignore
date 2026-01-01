@@ -142,3 +142,7 @@ dist
 .svelte-kit
 
 # End of https://www.toptal.com/developers/gitignore/api/node
+deployment.yml
+docker-compose.yml
+secret.yml
+service.yml
