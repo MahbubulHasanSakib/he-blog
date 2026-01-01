@@ -1,0 +1,16 @@
+version: "3.9"
+
+services:
+  app:
+    build: .
+    container_name: hawkeyes-blog-app
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${PORT}:3000"
+    environment:
+      MONGODB_URI: ${MONGODB_URI}
+    volumes:
+      - .:/app
+      - /app/node_modules
