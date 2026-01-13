@@ -407,6 +407,7 @@ export class PostService {
       categories,
       tags,
       title,
+      postType,
     } = query;
 
     const page = +queryPage > 0 ? +queryPage : 1;
@@ -415,6 +416,7 @@ export class PostService {
 
     const match: any = {};
     if (status) match.status = status;
+    if (postType) match.postType = postType;
     if (authorId) match.authorId = authorId;
     if (categories && categories.length)
       match.categories = { $in: categories?.map((e) => new Types.ObjectId(e)) };
