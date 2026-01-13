@@ -17,6 +17,7 @@ import { SubscribeModule } from './modules/subscribe/subscribe.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { ActivityModule } from './modules/activity/activity.module';
 import { ReportModule } from './modules/report/report.module';
+import { PressMediaModule } from './modules/press-media/press-media.module';
 @Module({
   imports: [
     ApiConfigModule,
@@ -40,6 +41,7 @@ import { ReportModule } from './modules/report/report.module';
     DashboardModule,
     ActivityModule,
     ReportModule,
+    PressMediaModule,
   ],
   controllers: [AppController],
   providers: [AppService],

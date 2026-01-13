@@ -462,6 +462,7 @@ export class PostService {
                 excerpt: 1,
                 featuredImageUrl: 1,
                 status: 1,
+                postType: 1,
                 scheduledAt: 1,
                 authorId: 1,
                 author: { $ifNull: [{ $first: '$author' }, null] },

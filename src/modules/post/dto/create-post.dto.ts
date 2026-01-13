@@ -14,6 +14,7 @@ import {
 import { ApiProperty } from '@nestjs/swagger';
 import { PostStatus } from '../interface/post-status.type';
 import { Type } from 'class-transformer';
+import { PostType } from '../interface/post.type';
 
 class FaqItemDto {
   @ApiProperty({ example: 'What is AI merchandising?' })
@@ -131,6 +132,16 @@ export class CreatePostDto {
   @IsEnum(PostStatus)
   @IsNotEmpty()
   status?: PostStatus;
+
+  @ApiProperty({
+    enum: PostType,
+    example: PostType.BLOG,
+    description: 'The post type of the post (Blog, Case Study, Both).',
+    required: false,
+  })
+  @IsEnum(PostType)
+  @IsNotEmpty()
+  postType?: PostType;
 
   @ApiProperty({
     type: [String],

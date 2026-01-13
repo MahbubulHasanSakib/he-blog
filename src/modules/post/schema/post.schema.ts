@@ -4,6 +4,7 @@ import { Category } from 'src/modules/category/schema/category.schema';
 import { Tag } from 'src/modules/tag/schema/tag.schema';
 import { PostStatus } from '../interface/post-status.type';
 import * as mongoose from 'mongoose';
+import { PostType } from '../interface/post.type';
 
 export type PostDocument = Post & Document;
 
@@ -56,6 +57,13 @@ export class Post {
     required: false,
   })
   categories: mongoose.Schema.Types.ObjectId[];
+
+  @Prop({
+    type: String,
+    enum: PostType,
+    required: false,
+  })
+  postType: PostType;
 
   @Prop({
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tag' }],
