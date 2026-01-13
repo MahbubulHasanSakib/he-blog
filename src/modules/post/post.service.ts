@@ -27,6 +27,7 @@ import * as utc from 'dayjs/plugin/utc';
 import * as timezone from 'dayjs/plugin/timezone';
 import { User, UserDocument } from '../user/schemas/user.schema';
 import { validatePublishRequirements } from './utils/helper';
+import { PostType } from './interface/post.type';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -416,7 +417,14 @@ export class PostService {
 
     const match: any = {};
     if (status) match.status = status;
-    if (postType) match.postType = postType;
+    if (postType) {
+      if (postType === PostType.BOTH) {
+        match.postType = PostType.BOTH;
+      } else {
+        match.postType = { $in: [postType, PostType.BOTH] };
+      }
+    }
+
     if (authorId) match.authorId = authorId;
     if (categories && categories.length)
       match.categories = { $in: categories?.map((e) => new Types.ObjectId(e)) };
