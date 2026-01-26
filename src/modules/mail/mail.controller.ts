@@ -28,7 +28,8 @@ export class MailController {
   @Post('/contact')
   sendEmailFromContactForm(@Body() contactFormDto: CreateContactMailDto) {
     let body = {
-      email: 'info@hedigital.tech',
+      //email: 'info@hedigital.tech',
+      email: 'mahbubul@hedigital.tech',
     };
     return this.mailService.sendEmail(
       body,
