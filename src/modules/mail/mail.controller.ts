@@ -75,6 +75,10 @@ export class MailController {
                                     <th align="left" style="background:#f8f8f8; padding:10px; border-bottom:1px solid #ddd;">Email</th>
                                     <td style="padding:10px; border-bottom:1px solid #ddd;">${contactFormDto.userEmail}</td>
                                 </tr>
+                                 <tr>
+                                    <th align="left" style="background:#f8f8f8; padding:10px; border-bottom:1px solid #ddd;">Phone no.</th>
+                                    <td style="padding:10px; border-bottom:1px solid #ddd;">${contactFormDto.phone}</td>
+                                </tr>
                                 <tr>
                                     <th align="left" style="background:#f8f8f8; padding:10px; border-bottom:1px solid #ddd;">Service Required</th>
                                     <td style="padding:10px; border-bottom:1px solid #ddd;">${contactFormDto.serviceRequired}</td>

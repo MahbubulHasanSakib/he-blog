@@ -47,4 +47,11 @@ export class CreateContactMailDto {
   @IsString()
   @IsNotEmpty()
   projectDetails: string;
+
+  @ApiProperty({
+    description: 'Phone no.',
+    example: '+8801812345695',
+  })
+  @IsOptional()
+  phone: string;
 }
